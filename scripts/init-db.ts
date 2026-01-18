@@ -32,21 +32,22 @@ async function initializeDatabase() {
     `
     console.log('✓ Categories table created')
 
-    // Seed initial categories if they don't exist
-    const categoriesCheck = await sql`SELECT COUNT(*) as count FROM categories`
-    if (categoriesCheck.rows[0].count === 0) {
+    // Seed initial categories
+    try {
       await sql`
         INSERT INTO categories (id, name, description) VALUES
         ('stoelen', 'Stoelen', 'Elegante stoelen voor elke gelegenheid'),
         ('tafels', 'Tafels', 'Tafels in diverse maten en stijlen'),
         ('decoratie', 'Decoratie', 'Decoratieve items voor de perfecte sfeer')
+        ON CONFLICT (id) DO NOTHING
       `
       console.log('✓ Initial categories seeded')
+    } catch (e) {
+      console.log('✓ Categories already exist')
     }
 
-    // Seed initial products if they don't exist
-    const productsCheck = await sql`SELECT COUNT(*) as count FROM products`
-    if (productsCheck.rows[0].count === 0) {
+    // Seed initial products
+    try {
       await sql`
         INSERT INTO products (id, name, category, description, dimensions, image) VALUES
         ('chiavari-stoel', 'Chiavari Stoel', 'stoelen', 'Elegante chiavari stoel, perfect voor bruiloften en formele evenementen.', '40 x 40 x 92 cm', '/products/chiavari-chair.jpg'),
@@ -61,8 +62,11 @@ async function initializeDatabase() {
         ('kandelaar', 'Kandelaar Set', 'decoratie', 'Set van 3 gouden kandelaars voor sfeervolle verlichting.', 'Verschillende hoogtes', '/products/candle-holder.jpg'),
         ('tafelloper', 'Tafelloper', 'decoratie', 'Luxe tafelloper beschikbaar in diverse kleuren.', '30 x 200 cm', '/products/table-runner.jpg'),
         ('backdrop', 'Backdrop Frame', 'decoratie', 'Decoratief backdrop frame voor foto-opstellingen.', '200 x 220 cm', '/products/backdrop.jpg')
+        ON CONFLICT (id) DO NOTHING
       `
       console.log('✓ Initial products seeded')
+    } catch (e) {
+      console.log('✓ Products already exist')
     }
 
     console.log('✅ Database initialization complete!')
