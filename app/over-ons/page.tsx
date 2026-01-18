@@ -93,8 +93,8 @@ export default function AboutPage() {
             </div>
             <div className="relative aspect-[4/3] lg:aspect-square">
               <Image
-                src="/team.jpg"
-                alt="Het Mailra team"
+                src="/about-us.jpg"
+                alt="Mailra evenementverhuur"
                 fill
                 className="rounded-2xl object-cover"
               />
