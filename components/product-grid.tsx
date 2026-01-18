@@ -8,7 +8,7 @@ interface ProductGridProps {
 }
 
 export async function ProductGrid({ selectedCategory }: ProductGridProps) {
-  const products = await getProducts()
+  const products = await getProducts(true) // Only fetch active products
   
   const filteredProducts =
     selectedCategory === "all"

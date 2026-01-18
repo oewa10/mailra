@@ -13,6 +13,7 @@ export async function initializeDatabase() {
         dimensions VARCHAR(255),
         capacity VARCHAR(255),
         image TEXT,
+        active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -58,8 +59,12 @@ export async function initializeDatabase() {
   }
 }
 
-export async function getProducts() {
+export async function getProducts(activeOnly: boolean = false) {
   try {
+    if (activeOnly) {
+      const result = await sql`SELECT * FROM products WHERE active = true ORDER BY created_at DESC`
+      return result.rows
+    }
     const result = await sql`SELECT * FROM products ORDER BY created_at DESC`
     return result.rows
   } catch (error) {
@@ -116,6 +121,21 @@ export async function deleteProduct(id: string) {
   } catch (error) {
     console.error('Error deleting product:', error)
     return false
+  }
+}
+
+export async function toggleProductActive(id: string) {
+  try {
+    const result = await sql`
+      UPDATE products 
+      SET active = NOT active, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING *
+    `
+    return result.rows[0]
+  } catch (error) {
+    console.error('Error toggling product active status:', error)
+    return null
   }
 }
 

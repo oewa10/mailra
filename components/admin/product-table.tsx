@@ -1,16 +1,17 @@
 "use client"
 
 import { Product } from "@/lib/products"
-import { Edit2, Trash2 } from "lucide-react"
+import { Edit2, Trash2, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ProductTableProps {
-  products: Product[]
-  onEdit: (product: Product) => void
+  products: any[]
+  onEdit: (product: any) => void
   onDelete: (id: string) => void
+  onToggleActive: (id: string) => void
 }
 
-export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) {
+export function ProductTable({ products, onEdit, onDelete, onToggleActive }: ProductTableProps) {
   if (products.length === 0) {
     return (
       <div className="bg-card rounded-lg border border-border p-12 text-center">
@@ -38,7 +39,7 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                 Afmetingen
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
-                Capaciteit
+                Status
               </th>
               <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">
                 Acties
@@ -80,11 +81,30 @@ export function ProductTable({ products, onEdit, onDelete }: ProductTableProps) 
                 <td className="px-6 py-4 text-sm text-foreground">
                   {product.dimensions || "-"}
                 </td>
-                <td className="px-6 py-4 text-sm text-foreground">
-                  {product.capacity || "-"}
+                <td className="px-6 py-4">
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    product.active
+                      ? "bg-green-500/10 text-green-600"
+                      : "bg-gray-500/10 text-gray-600"
+                  }`}>
+                    {product.active ? "Actief" : "Inactief"}
+                  </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onToggleActive(product.id)}
+                      className="rounded-lg"
+                      title={product.active ? "Deactiveer product" : "Activeer product"}
+                    >
+                      {product.active ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

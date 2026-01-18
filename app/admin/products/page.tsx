@@ -54,6 +54,23 @@ export default function ProductsPage() {
     setEditingProduct(null)
   }
 
+  const handleToggleActive = async (id: string) => {
+    try {
+      const response = await fetch(`/api/products/${id}/toggle-active`, {
+        method: "PATCH",
+      })
+      
+      if (response.ok) {
+        const updatedProduct = await response.json()
+        setProducts(
+          products.map((p) => (p.id === id ? updatedProduct : p))
+        )
+      }
+    } catch (error) {
+      console.error("Error toggling product active status:", error)
+    }
+  }
+
   return (
     <div className="flex-1 p-8 pt-32">
       <div className="max-w-7xl mx-auto">
@@ -103,6 +120,7 @@ export default function ProductsPage() {
           products={filteredProducts}
           onEdit={handleEdit}
           onDelete={handleDeleteProduct}
+          onToggleActive={handleToggleActive}
         />
       </div>
     </div>
