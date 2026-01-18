@@ -91,16 +91,9 @@ export default function HomePage() {
         </div>
       </section>
       
-      {/* Stats Section with Parallax */}
-      <section className="relative bg-card py-16 overflow-hidden">
-        {/* Parallax Background Elements */}
-        <div className="absolute inset-0 z-0 opacity-5">
-          <div className="absolute top-10 left-10 h-40 w-40 rounded-full bg-primary animate-float" style={{animationDelay: '0s', animationDuration: '7s'}} />
-          <div className="absolute bottom-10 right-20 h-60 w-60 rounded-full bg-accent animate-float" style={{animationDelay: '1s', animationDuration: '8s'}} />
-          <div className="absolute top-1/2 left-1/3 h-20 w-20 rounded-full bg-primary animate-float" style={{animationDelay: '2s', animationDuration: '6s'}} />
-        </div>
-        
-        <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
+      {/* Stats Section */}
+      <section className="bg-card py-16">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             {stats.map((stat, index) => (
               <div 
