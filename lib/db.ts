@@ -11,7 +11,7 @@ export async function initializeDatabase() {
         description TEXT,
         dimensions VARCHAR(255),
         capacity VARCHAR(255),
-        image BYTEA,
+        image TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
