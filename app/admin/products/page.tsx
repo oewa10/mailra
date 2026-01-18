@@ -1,17 +1,37 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Edit2, Trash2, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { products as initialProducts, Product } from "@/lib/products"
+import { Product } from "@/lib/products"
 import { ProductForm } from "@/components/admin/product-form"
 import { ProductTable } from "@/components/admin/product-table"
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts)
+  const [products, setProducts] = useState<any[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [editingProduct, setEditingProduct] = useState<any | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [loading, setLoading] = useState(true)
+
+  // Fetch products from database on mount
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("/api/products")
+      if (response.ok) {
+        const data = await response.json()
+        setProducts(data)
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredProducts = products.filter(
     (product) =>
@@ -19,28 +39,56 @@ export default function ProductsPage() {
       product.category.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleAddProduct = (newProduct: Omit<Product, "id"> | Product) => {
-    if ("id" in newProduct && newProduct.id) {
-      // Update existing
-      setProducts(
-        products.map((p) => (p.id === newProduct.id ? (newProduct as Product) : p))
-      )
-    } else {
-      // Add new
-      const id = `${newProduct.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`
-      setProducts([...products, { ...newProduct, id } as Product])
+  const handleAddProduct = async (newProduct: Omit<Product, "id"> | any) => {
+    try {
+      if ("id" in newProduct && newProduct.id) {
+        // Update existing product
+        const response = await fetch(`/api/products/${newProduct.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newProduct),
+        })
+        if (response.ok) {
+          const updated = await response.json()
+          setProducts(products.map((p) => (p.id === newProduct.id ? updated : p)))
+        }
+      } else {
+        // Create new product
+        const id = `${newProduct.name.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`
+        const productToCreate = { ...newProduct, id }
+        const response = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productToCreate),
+        })
+        if (response.ok) {
+          const created = await response.json()
+          setProducts([...products, created])
+        }
+      }
+      setShowForm(false)
+      setEditingProduct(null)
+    } catch (error) {
+      console.error("Error saving product:", error)
     }
-    setShowForm(false)
-    setEditingProduct(null)
   }
 
-  const handleUpdateProduct = (updatedProduct: Product) => {
+  const handleUpdateProduct = (updatedProduct: any) => {
     handleAddProduct(updatedProduct)
   }
 
-  const handleDeleteProduct = (id: string) => {
+  const handleDeleteProduct = async (id: string) => {
     if (confirm("Weet u zeker dat u dit product wilt verwijderen?")) {
-      setProducts(products.filter((p) => p.id !== id))
+      try {
+        const response = await fetch(`/api/products?id=${id}`, {
+          method: "DELETE",
+        })
+        if (response.ok) {
+          setProducts(products.filter((p) => p.id !== id))
+        }
+      } catch (error) {
+        console.error("Error deleting product:", error)
+      }
     }
   }
 

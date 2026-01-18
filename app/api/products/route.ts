@@ -14,8 +14,12 @@ export async function POST(request: NextRequest) {
   try {
     const product = await request.json()
     const result = await createProduct(product)
+    if (!result) {
+      return NextResponse.json({ error: 'Failed to create product in database' }, { status: 500 })
+    }
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
+    console.error('Product creation error:', error)
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }
 }
