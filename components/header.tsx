@@ -70,12 +70,12 @@ export function Header() {
       
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
+        <>
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" 
             onClick={() => setMobileMenuOpen(false)} 
           />
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
+          <div className="fixed top-0 left-0 right-0 bottom-0 z-50 overflow-y-auto bg-background lg:hidden">
             <div className="flex items-center justify-between px-6 py-6 border-b border-border">
               <Link href="/" className="-m-1.5 p-1.5" onClick={() => setMobileMenuOpen(false)}>
                 <Image
@@ -89,7 +89,10 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  console.log('Close button clicked')
+                  setMobileMenuOpen(false)
+                }}
                 aria-label="Close menu"
                 className="h-10 w-10"
               >
@@ -118,7 +121,7 @@ export function Header() {
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   )
