@@ -3,7 +3,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ProductGrid } from "@/components/product-grid"
 import { CategoryFilter } from "@/components/category-filter"
-import { categories } from "@/lib/products"
+import { getCategories } from "@/lib/db"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -18,6 +18,7 @@ export default async function ProductsPage({
 }) {
   const { category } = await searchParams
   const selectedCategory = category || "all"
+  const categories = await getCategories()
 
   return (
     <main className="min-h-screen">
@@ -40,7 +41,7 @@ export default async function ProductsPage({
       <section className="border-b border-border bg-card sticky top-[73px] z-40">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <CategoryFilter 
-            categories={categories} 
+            categories={categories as any} 
             selectedCategory={selectedCategory} 
           />
         </div>

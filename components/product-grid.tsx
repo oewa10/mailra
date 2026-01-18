@@ -1,17 +1,19 @@
 import Image from "next/image"
 import Link from "next/link"
-import { products, type Category } from "@/lib/products"
 import { Button } from "@/components/ui/button"
+import { getProducts } from "@/lib/db"
 
 interface ProductGridProps {
   selectedCategory: string
 }
 
-export function ProductGrid({ selectedCategory }: ProductGridProps) {
+export async function ProductGrid({ selectedCategory }: ProductGridProps) {
+  const products = await getProducts()
+  
   const filteredProducts =
     selectedCategory === "all"
       ? products
-      : products.filter((product) => product.category === selectedCategory)
+      : products.filter((product: any) => product.category === selectedCategory)
 
   if (filteredProducts.length === 0) {
     return (
