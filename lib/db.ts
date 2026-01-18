@@ -125,8 +125,27 @@ export async function deleteProduct(id: string) {
   }
 }
 
+export async function verifyProductExists(id: string) {
+  try {
+    const result = await sql`
+      SELECT id FROM products WHERE id = ${id}
+    `
+    return result.rows.length > 0
+  } catch (error) {
+    console.error('Error verifying product existence:', error)
+    return false
+  }
+}
+
 export async function toggleProductActive(id: string) {
   try {
+    // First check if the product exists
+    const exists = await verifyProductExists(id)
+    if (!exists) {
+      console.error(`Product with ID ${id} not found in database`)
+      return null
+    }
+    
     const result = await sql`
       UPDATE products 
       SET active = NOT active, updated_at = CURRENT_TIMESTAMP

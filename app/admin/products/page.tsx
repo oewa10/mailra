@@ -22,14 +22,21 @@ export default function ProductsPage() {
   }, [])
 
   const fetchProducts = async () => {
+    setLoading(true)
     try {
+      console.log("Fetching products from database...")
       const response = await fetch("/api/products")
       if (response.ok) {
         const data = await response.json()
+        console.log(`Fetched ${data.length} products from database`)
         setProducts(data)
+      } else {
+        console.error("Failed to fetch products:", response.status)
+        alert("Er is een fout opgetreden bij het ophalen van producten.")
       }
     } catch (error) {
       console.error("Error fetching products:", error)
+      alert("Er is een fout opgetreden bij het ophalen van producten.")
     } finally {
       setLoading(false)
     }
@@ -107,24 +114,39 @@ export default function ProductsPage() {
   const handleToggleActive = async (id: string) => {
     setActionLoading(id)
     try {
+      console.log(`Toggling product with ID: ${id}`)
+      
       const response = await fetch(`/api/products/${id}/toggle-active`, {
         method: "PATCH",
       })
       
-      const data = await response.json()
-      
       if (!response.ok) {
-        console.error("Error toggling product:", data.error)
-        alert("Fout bij het wijzigen van productstatus")
+        const errorData = await response.json()
+        console.error(`Error toggling product (${response.status}):`, errorData.error)
+        
+        if (response.status === 404) {
+          if (confirm(`Product met ID ${id} niet gevonden in de database. Wilt u de pagina vernieuwen om de laatste gegevens te laden?`)) {
+            // Refresh the products data
+            await fetchProducts()
+          }
+        } else {
+          alert(`Fout bij het wijzigen van productstatus: ${errorData.error || 'Onbekende fout'}`)
+        }
         return
       }
       
+      const data = await response.json()
+      console.log('Product toggle successful:', data)
+      
+      // Update the product in the local state
       setProducts(
         products.map((p) => (p.id === id ? data : p))
       )
     } catch (error) {
       console.error("Error toggling product active status:", error)
-      alert("Fout bij het wijzigen van productstatus")
+      alert("Fout bij het wijzigen van productstatus. Controleer de console voor meer details.")
+      // Refresh products data to ensure consistency
+      await fetchProducts()
     } finally {
       setActionLoading(null)
     }
