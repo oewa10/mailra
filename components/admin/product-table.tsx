@@ -1,7 +1,7 @@
 "use client"
 
 import { Product } from "@/lib/products"
-import { Edit2, Trash2, Eye, EyeOff } from "lucide-react"
+import { Edit2, Trash2, Eye, EyeOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ProductTableProps {
@@ -9,9 +9,22 @@ interface ProductTableProps {
   onEdit: (product: any) => void
   onDelete: (id: string) => void
   onToggleActive: (id: string) => void
+  selectedIds?: Set<string>
+  onSelectProduct?: (id: string) => void
+  onSelectAll?: () => void
+  actionLoading?: string | null
 }
 
-export function ProductTable({ products, onEdit, onDelete, onToggleActive }: ProductTableProps) {
+export function ProductTable({ 
+  products, 
+  onEdit, 
+  onDelete, 
+  onToggleActive,
+  selectedIds = new Set(),
+  onSelectProduct,
+  onSelectAll,
+  actionLoading
+}: ProductTableProps) {
   if (products.length === 0) {
     return (
       <div className="bg-card rounded-lg border border-border p-12 text-center">
@@ -26,6 +39,14 @@ export function ProductTable({ products, onEdit, onDelete, onToggleActive }: Pro
         <table className="w-full">
           <thead className="bg-secondary border-b border-border">
             <tr>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size > 0 && selectedIds.size === products.length}
+                  onChange={onSelectAll}
+                  className="rounded border-border"
+                />
+              </th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
                 Afbeelding
               </th>
@@ -49,6 +70,14 @@ export function ProductTable({ products, onEdit, onDelete, onToggleActive }: Pro
           <tbody className="divide-y divide-border">
             {products.map((product) => (
               <tr key={product.id} className="hover:bg-secondary/50 transition-colors">
+                <td className="px-6 py-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(product.id)}
+                    onChange={() => onSelectProduct?.(product.id)}
+                    className="rounded border-border"
+                  />
+                </td>
                 <td className="px-6 py-4">
                   {product.image ? (
                     <img
@@ -96,10 +125,13 @@ export function ProductTable({ products, onEdit, onDelete, onToggleActive }: Pro
                       variant="outline"
                       size="sm"
                       onClick={() => onToggleActive(product.id)}
+                      disabled={actionLoading === product.id}
                       className="rounded-lg"
                       title={product.active ? "Deactiveer product" : "Activeer product"}
                     >
-                      {product.active ? (
+                      {actionLoading === product.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : product.active ? (
                         <Eye className="h-4 w-4" />
                       ) : (
                         <EyeOff className="h-4 w-4" />

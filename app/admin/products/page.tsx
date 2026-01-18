@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Edit2, Trash2, Image as ImageIcon } from "lucide-react"
+import { Plus, Edit2, Trash2, Image as ImageIcon, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Product } from "@/lib/products"
 import { ProductForm } from "@/components/admin/product-form"
@@ -13,6 +13,8 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<any | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   // Fetch products from database on mount
   useEffect(() => {
@@ -103,6 +105,7 @@ export default function ProductsPage() {
   }
 
   const handleToggleActive = async (id: string) => {
+    setActionLoading(id)
     try {
       const response = await fetch(`/api/products/${id}/toggle-active`, {
         method: "PATCH",
@@ -116,6 +119,45 @@ export default function ProductsPage() {
       }
     } catch (error) {
       console.error("Error toggling product active status:", error)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleSelectProduct = (id: string) => {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredProducts.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredProducts.map((p) => p.id)))
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return
+    if (!confirm(`Weet u zeker dat u ${selectedIds.size} product(en) wilt verwijderen?`)) return
+
+    setActionLoading("bulk-delete")
+    try {
+      const deletePromises = Array.from(selectedIds).map((id) =>
+        fetch(`/api/products?id=${id}`, { method: "DELETE" })
+      )
+      await Promise.all(deletePromises)
+      setProducts(products.filter((p) => !selectedIds.has(p.id)))
+      setSelectedIds(new Set())
+    } catch (error) {
+      console.error("Error deleting products:", error)
+    } finally {
+      setActionLoading(null)
     }
   }
 
@@ -155,13 +197,35 @@ export default function ProductsPage() {
         )}
 
         <div className="bg-card rounded-lg border border-border p-6 mb-6">
-          <input
-            type="text"
-            placeholder="Zoeken op naam of categorie..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <div className="flex gap-4 items-center">
+            <input
+              type="text"
+              placeholder="Zoeken op naam of categorie..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {selectedIds.size > 0 && (
+              <Button
+                onClick={handleBulkDelete}
+                disabled={actionLoading === "bulk-delete"}
+                variant="destructive"
+                className="rounded-lg"
+              >
+                {actionLoading === "bulk-delete" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Bezig...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Verwijder {selectedIds.size}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
 
         <ProductTable
@@ -169,6 +233,10 @@ export default function ProductsPage() {
           onEdit={handleEdit}
           onDelete={handleDeleteProduct}
           onToggleActive={handleToggleActive}
+          selectedIds={selectedIds}
+          onSelectProduct={handleSelectProduct}
+          onSelectAll={handleSelectAll}
+          actionLoading={actionLoading}
         />
       </div>
     </div>
