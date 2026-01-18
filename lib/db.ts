@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres'
+import bcrypt from 'bcryptjs'
 
 export async function initializeDatabase() {
   try {
@@ -25,6 +26,29 @@ export async function initializeDatabase() {
         description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `
+
+    // Create admin users table
+    await sql`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id VARCHAR(255) PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        name VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `
+
+    // Create password reset tokens table
+    await sql`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+        token VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `
 
@@ -140,6 +164,83 @@ export async function deleteCategory(id: string) {
     return true
   } catch (error) {
     console.error('Error deleting category:', error)
+    return false
+  }
+}
+
+// Admin authentication functions
+export async function getAdminByEmail(email: string) {
+  try {
+    const result = await sql`SELECT * FROM admin_users WHERE email = ${email}`
+    return result.rows[0]
+  } catch (error) {
+    console.error('Error fetching admin user:', error)
+    return null
+  }
+}
+
+export async function verifyAdminPassword(email: string, password: string) {
+  try {
+    const user = await getAdminByEmail(email)
+    if (!user) return null
+    
+    const isValid = await bcrypt.compare(password, user.password_hash)
+    if (!isValid) return null
+    
+    return user
+  } catch (error) {
+    console.error('Error verifying password:', error)
+    return null
+  }
+}
+
+export async function createPasswordResetToken(userId: string) {
+  try {
+    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    const id = `reset_${Date.now()}`
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+    
+    await sql`
+      INSERT INTO password_reset_tokens (id, user_id, token, expires_at)
+      VALUES (${id}, ${userId}, ${token}, ${expiresAt})
+    `
+    
+    return token
+  } catch (error) {
+    console.error('Error creating reset token:', error)
+    return null
+  }
+}
+
+export async function verifyResetToken(token: string) {
+  try {
+    const result = await sql`
+      SELECT * FROM password_reset_tokens 
+      WHERE token = ${token} AND expires_at > NOW()
+    `
+    return result.rows[0]
+  } catch (error) {
+    console.error('Error verifying reset token:', error)
+    return null
+  }
+}
+
+export async function resetAdminPassword(userId: string, newPassword: string) {
+  try {
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+    
+    await sql`
+      UPDATE admin_users 
+      SET password_hash = ${passwordHash}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${userId}
+    `
+    
+    // Delete all reset tokens for this user
+    await sql`DELETE FROM password_reset_tokens WHERE user_id = ${userId}`
+    
+    return true
+  } catch (error) {
+    console.error('Error resetting password:', error)
     return false
   }
 }
