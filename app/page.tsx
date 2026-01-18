@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ContactForm } from "@/components/contact-form"
+import { PortfolioInspiration } from "@/components/portfolio-inspiration"
 
 const categories = [
   {
@@ -175,6 +176,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      
+      {/* Portfolio Inspiration Section */}
+      <PortfolioInspiration />
       
       {/* About Preview Section */}
       <section className="py-24 bg-secondary overflow-hidden">
