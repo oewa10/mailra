@@ -169,6 +169,31 @@ export async function getCategories() {
   }
 }
 
+export async function getCategoriesWithProductCounts(activeOnly: boolean = true) {
+  try {
+    let query = `
+      SELECT c.*, COUNT(p.id) as product_count
+      FROM categories c
+      LEFT JOIN products p ON c.id = p.category
+    `
+    
+    if (activeOnly) {
+      query += ` AND p.active = true`
+    }
+    
+    query += `
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+    `
+    
+    const result = await sql.query(query)
+    return result.rows
+  } catch (error) {
+    console.error('Error fetching categories with product counts:', error)
+    return []
+  }
+}
+
 export async function createCategory(category: any) {
   try {
     const result = await sql`

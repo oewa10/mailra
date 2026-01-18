@@ -3,7 +3,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ProductGrid } from "@/components/product-grid"
 import { CategoryFilter } from "@/components/category-filter"
-import { getCategories } from "@/lib/db"
+import { getCategoriesWithProductCounts } from "@/lib/db"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -18,7 +18,10 @@ export default async function ProductsPage({
 }) {
   const { category } = await searchParams
   const selectedCategory = category || "all"
-  const categories = await getCategories()
+  
+  // Get categories with product counts and filter out empty ones
+  const categoriesWithCounts = await getCategoriesWithProductCounts(true)
+  const categories = categoriesWithCounts.filter(cat => cat.product_count > 0)
 
   return (
     <main className="min-h-screen">

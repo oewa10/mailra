@@ -8,6 +8,7 @@ interface Category {
   id: string
   name: string
   description: string
+  product_count?: number
 }
 
 interface CategoryFilterProps {
