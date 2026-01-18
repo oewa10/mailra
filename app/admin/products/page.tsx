@@ -111,14 +111,20 @@ export default function ProductsPage() {
         method: "PATCH",
       })
       
-      if (response.ok) {
-        const updatedProduct = await response.json()
-        setProducts(
-          products.map((p) => (p.id === id ? updatedProduct : p))
-        )
+      const data = await response.json()
+      
+      if (!response.ok) {
+        console.error("Error toggling product:", data.error)
+        alert("Fout bij het wijzigen van productstatus")
+        return
       }
+      
+      setProducts(
+        products.map((p) => (p.id === id ? data : p))
+      )
     } catch (error) {
       console.error("Error toggling product active status:", error)
+      alert("Fout bij het wijzigen van productstatus")
     } finally {
       setActionLoading(null)
     }
