@@ -66,9 +66,9 @@ export function Header() {
       
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40">
+        <div className="lg:hidden fixed inset-0 z-50">
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm" 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" 
             onClick={() => setMobileMenuOpen(false)} 
           />
           <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
