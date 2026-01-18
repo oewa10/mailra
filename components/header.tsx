@@ -32,12 +32,16 @@ export function Header() {
           </Link>
         </div>
         
-        <div className="flex lg:hidden">
+        <div className="flex lg:hidden z-50">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setMobileMenuOpen(true)}
+            onClick={() => {
+              console.log('Menu button clicked, opening menu')
+              setMobileMenuOpen(true)
+            }}
             aria-label="Open menu"
+            className="h-10 w-10"
           >
             <Menu className="h-6 w-6" />
           </Button>
