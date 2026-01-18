@@ -153,18 +153,18 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="flex-1 p-8 pt-32">
+    <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-28 sm:pt-32">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
           <div>
-            <h1 className="font-serif text-4xl text-foreground">Categorieën</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="font-serif text-3xl sm:text-4xl text-foreground">Categorieën</h1>
+            <p className="text-muted-foreground mt-1 sm:mt-2">
               {categories.length} categorieën in totaal
             </p>
           </div>
           <Button
             onClick={() => handleOpenForm()}
-            className="rounded-full"
+            className="w-full sm:w-auto rounded-full"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nieuwe Categorie
@@ -172,8 +172,8 @@ export default function CategoriesPage() {
         </div>
 
         {showForm && (
-          <div className="mb-8 bg-card rounded-lg border border-border p-6">
-            <h2 className="font-serif text-2xl text-foreground mb-6">
+          <div className="mb-6 sm:mb-8 bg-card rounded-lg border border-border p-4 sm:p-6">
+            <h2 className="font-serif text-xl sm:text-2xl text-foreground mb-4 sm:mb-6">
               {editingCategory ? "Categorie Bewerken" : "Nieuwe Categorie"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -234,7 +234,7 @@ export default function CategoriesPage() {
             <p className="text-muted-foreground">Geen categorieën gevonden</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {categories.map((category) => (
               <div
                 key={category.id}
@@ -260,29 +260,28 @@ export default function CategoriesPage() {
                 <p className="text-sm text-muted-foreground mb-6 line-clamp-2">
                   {category.description || "Geen beschrijving"}
                 </p>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleToggleActive(category.id)}
                     disabled={actionLoading === category.id}
-                    className="rounded-lg"
-                    title={category.active ? "Deactiveer categorie" : "Activeer categorie"}
+                    className="w-full sm:flex-1 rounded-lg py-2"
                   >
                     {actionLoading === category.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : category.active ? (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 mr-2" />
                     ) : (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 mr-2" />
                     )}
+                    <span>{category.active ? "Deactiveren" : "Activeren"}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleOpenForm(category)}
-                    disabled={actionLoading === "submit"}
-                    className="flex-1 rounded-lg"
+                    className="w-full sm:flex-1 rounded-lg py-2"
                   >
                     <Edit2 className="h-4 w-4 mr-2" />
                     Bewerken
@@ -292,10 +291,10 @@ export default function CategoriesPage() {
                     size="sm"
                     onClick={() => handleDelete(category.id)}
                     disabled={actionLoading === category.id}
-                    className="flex-1 rounded-lg text-destructive hover:text-destructive"
+                    className="w-full sm:flex-1 rounded-lg py-2 text-destructive hover:text-destructive"
                   >
                     {actionLoading === category.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
                       <Trash2 className="h-4 w-4 mr-2" />
                     )}

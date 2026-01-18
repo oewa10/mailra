@@ -35,47 +35,53 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="flex-1 p-8 pt-32">
+    <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-28 sm:pt-32">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="font-serif text-4xl text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-2">Welkom in het Mailra admin panel</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="font-serif text-3xl sm:text-4xl text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2">Welkom in het Mailra admin panel</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
           {stats.map((stat) => {
             const Icon = stat.icon
             return (
-              <div key={stat.label} className="bg-card rounded-lg border border-border p-6">
-                <div className={`h-12 w-12 rounded-lg ${stat.color} flex items-center justify-center mb-4`}>
-                  <Icon className="h-6 w-6" />
+              <div key={stat.label} className="bg-card rounded-lg border border-border p-4 sm:p-6">
+                <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-lg ${stat.color} flex items-center justify-center mb-3 sm:mb-4`}>
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="text-3xl font-bold text-foreground mt-2">{stat.value}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1 sm:mt-2">{stat.value}</p>
               </div>
             )
           })}
         </div>
 
-        <div className="bg-card rounded-lg border border-border p-8">
-          <h2 className="font-serif text-2xl text-foreground mb-4">Aan de slag</h2>
-          <p className="text-muted-foreground mb-6">
+        <div className="bg-card rounded-lg border border-border p-4 sm:p-6 lg:p-8">
+          <h2 className="font-serif text-xl sm:text-2xl text-foreground mb-2 sm:mb-4">Aan de slag</h2>
+          <p className="text-sm text-muted-foreground mb-4 sm:mb-6">
             Beheer uw producten, categorieën en meer via het admin panel.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <a
               href="/admin/products"
-              className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors"
+              className="p-3 sm:p-4 border border-border rounded-lg hover:bg-secondary transition-colors"
             >
-              <h3 className="font-semibold text-foreground mb-2">Producten Beheren</h3>
-              <p className="text-sm text-muted-foreground">Voeg, bewerk of verwijder producten</p>
+              <h3 className="font-semibold text-foreground mb-1 sm:mb-2 flex items-center">
+                <Package className="h-4 w-4 mr-2 text-primary inline sm:hidden" />
+                Producten Beheren
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Voeg, bewerk of verwijder producten</p>
             </a>
             <a
               href="/admin/categories"
-              className="p-4 border border-border rounded-lg hover:bg-secondary transition-colors"
+              className="p-3 sm:p-4 border border-border rounded-lg hover:bg-secondary transition-colors"
             >
-              <h3 className="font-semibold text-foreground mb-2">Categorieën Beheren</h3>
-              <p className="text-sm text-muted-foreground">Beheer uw productcategorieën</p>
+              <h3 className="font-semibold text-foreground mb-1 sm:mb-2 flex items-center">
+                <Tag className="h-4 w-4 mr-2 text-primary inline sm:hidden" />
+                Categorieën Beheren
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Beheer uw productcategorieën</p>
             </a>
           </div>
         </div>

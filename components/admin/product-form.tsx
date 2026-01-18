@@ -90,9 +90,10 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
+    <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-3xl mx-auto px-4 sm:px-0">
+      {/* Product name and category - stacked on mobile, side by side on larger screens */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <div className="w-full">
           <label className="block text-sm font-medium text-foreground mb-2">
             Productnaam *
           </label>
@@ -102,12 +103,12 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
             value={formData.name}
             onChange={handleChange}
             placeholder="bijv. Chiavari Stoel"
-            className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
             required
           />
         </div>
 
-        <div>
+        <div className="w-full">
           <label className="block text-sm font-medium text-foreground mb-2">
             Categorie *
           </label>
@@ -115,7 +116,7 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base appearance-none"
             required
             disabled={categoriesLoading}
           >
@@ -131,7 +132,8 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
         </div>
       </div>
 
-      <div>
+      {/* Description - full width */}
+      <div className="w-full">
         <label className="block text-sm font-medium text-foreground mb-2">
           Beschrijving
         </label>
@@ -141,12 +143,13 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
           onChange={handleChange}
           placeholder="Beschrijf het product..."
           rows={4}
-          className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
+      {/* Dimensions and capacity - stacked on mobile, side by side on larger screens */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <div className="w-full">
           <label className="block text-sm font-medium text-foreground mb-2">
             Afmetingen
           </label>
@@ -156,11 +159,11 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
             value={formData.dimensions}
             onChange={handleChange}
             placeholder="bijv. 40 x 40 x 92 cm"
-            className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
           />
         </div>
 
-        <div>
+        <div className="w-full">
           <label className="block text-sm font-medium text-foreground mb-2">
             Capaciteit
           </label>
@@ -170,26 +173,27 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
             value={formData.capacity}
             onChange={handleChange}
             placeholder="bijv. 8 personen"
-            className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
           />
         </div>
       </div>
 
-      <div>
+      {/* Image upload - optimized for touch */}
+      <div className="w-full">
         <label className="block text-sm font-medium text-foreground mb-2">
           Afbeelding
         </label>
-        <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+        <div className="border-2 border-dashed border-border rounded-lg p-4 sm:p-6 text-center">
           {imagePreview ? (
             <div className="space-y-4">
               <img
                 src={imagePreview}
                 alt="Preview"
-                className="h-32 w-32 object-cover rounded-lg mx-auto"
+                className="h-40 w-40 object-cover rounded-lg mx-auto"
               />
-              <label className="cursor-pointer">
-                <span className="text-sm text-primary hover:underline">
-                  Klik om afbeelding te wijzigen
+              <label className="cursor-pointer inline-block py-2 px-4 bg-secondary/50 rounded-lg hover:bg-secondary">
+                <span className="text-sm font-medium text-primary">
+                  Wijzig afbeelding
                 </span>
                 <input
                   type="file"
@@ -200,11 +204,11 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
               </label>
             </div>
           ) : (
-            <label className="cursor-pointer">
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="h-8 w-8 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  Klik om afbeelding te uploaden
+            <label className="cursor-pointer block py-8 hover:bg-secondary/20 rounded-lg transition-colors">
+              <div className="flex flex-col items-center gap-3">
+                <Upload className="h-10 w-10 text-muted-foreground" />
+                <span className="text-base text-muted-foreground">
+                  Tik om afbeelding te uploaden
                 </span>
               </div>
               <input
@@ -218,16 +222,20 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
         </div>
       </div>
 
-      <div className="flex gap-4 justify-end pt-4">
+      {/* Form buttons - full width on mobile */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-end pt-4">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="rounded-full"
+          className="w-full sm:w-auto rounded-full py-3 px-6"
         >
           Annuleren
         </Button>
-        <Button type="submit" className="rounded-full">
+        <Button 
+          type="submit" 
+          className="w-full sm:w-auto rounded-full py-3 px-6"
+        >
           {product ? "Opslaan" : "Product Toevoegen"}
         </Button>
       </div>

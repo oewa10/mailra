@@ -168,12 +168,12 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="flex-1 p-8 pt-32">
+    <div className="flex-1 p-4 sm:p-6 lg:p-8 pt-28 sm:pt-32">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
           <div>
-            <h1 className="font-serif text-4xl text-foreground">Producten</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="font-serif text-3xl sm:text-4xl text-foreground">Producten</h1>
+            <p className="text-muted-foreground mt-1 sm:mt-2">
               {products.length} producten in totaal
             </p>
           </div>
@@ -182,7 +182,7 @@ export default function ProductsPage() {
               setEditingProduct(null)
               setShowForm(true)
             }}
-            className="rounded-full"
+            className="w-full sm:w-auto rounded-full"
           >
             <Plus className="h-4 w-4 mr-2" />
             Nieuw Product
@@ -190,8 +190,8 @@ export default function ProductsPage() {
         </div>
 
         {showForm && (
-          <div className="mb-8 bg-card rounded-lg border border-border p-6">
-            <h2 className="font-serif text-2xl text-foreground mb-6">
+          <div className="mb-6 sm:mb-8 bg-card rounded-lg border border-border p-4 sm:p-6">
+            <h2 className="font-serif text-xl sm:text-2xl text-foreground mb-4 sm:mb-6">
               {editingProduct ? "Product Bewerken" : "Nieuw Product"}
             </h2>
             <ProductForm
@@ -202,21 +202,21 @@ export default function ProductsPage() {
           </div>
         )}
 
-        <div className="bg-card rounded-lg border border-border p-6 mb-6">
-          <div className="flex gap-4 items-center">
+        <div className="bg-card rounded-lg border border-border p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
             <input
               type="text"
               placeholder="Zoeken op naam of categorie..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full sm:flex-1 px-4 py-3 sm:py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-base"
             />
             {selectedIds.size > 0 && (
               <Button
                 onClick={handleBulkDelete}
                 disabled={actionLoading === "bulk-delete"}
                 variant="destructive"
-                className="rounded-lg"
+                className="w-full sm:w-auto rounded-lg py-2 px-4"
               >
                 {actionLoading === "bulk-delete" ? (
                   <>
