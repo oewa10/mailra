@@ -264,8 +264,8 @@ export default function HomePage() {
         </div>
       </section>
       
-      {/* Portfolio Inspiration Section */}
-      <PortfolioInspiration />
+      {/* Portfolio Inspiration Section - Hidden for now */}
+      {/* <PortfolioInspiration /> */}
       
       {/* Contact Section */}
       <section className="py-24 bg-background overflow-hidden" id="contact">
