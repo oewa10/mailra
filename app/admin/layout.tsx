@@ -18,6 +18,9 @@ export default function AdminLayout({
     <main className="min-h-screen bg-background">
       <Header />
       
+      {/* Add a spacer to prevent content from being hidden under the fixed header */}
+      <div className="h-[72px]"></div>
+      
       {/* Mobile menu toggle */}
       <div className="fixed top-24 left-4 z-30 lg:hidden">
         <Button
@@ -30,7 +33,7 @@ export default function AdminLayout({
         </Button>
       </div>
       
-      <div className="flex">
+      <div className="flex pt-4">
         {/* Responsive Sidebar */}
         <AdminSidebar 
           isMobileOpen={mobileMenuOpen} 
