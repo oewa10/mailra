@@ -4,6 +4,7 @@ import { ArrowRight, MapPin, Truck, HeartHandshake, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { NetherlandsMap } from "@/components/netherlands-map"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -196,13 +197,8 @@ export default function AboutPage() {
               </div>
             </div>
             
-            <div className="relative aspect-square rounded-2xl bg-secondary overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <p className="font-serif text-6xl text-primary">NL</p>
-                  <p className="mt-4 text-muted-foreground">Landelijke dekking</p>
-                </div>
-              </div>
+            <div className="relative aspect-square rounded-2xl overflow-hidden">
+              <NetherlandsMap />
             </div>
           </div>
         </div>
