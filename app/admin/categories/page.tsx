@@ -1,21 +1,42 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Edit2, Trash2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Plus, Edit2, Trash2, Eye, EyeOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { categories as initialCategories } from "@/lib/products"
 
 interface Category {
   id: string
   name: string
   description: string
+  active?: boolean
 }
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([...initialCategories])
+  const [categories, setCategories] = useState<Category[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({ name: "", description: "" })
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  // Fetch categories from database on mount
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("/api/categories")
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data)
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleOpenForm = (category?: Category) => {
     if (category) {
@@ -34,34 +55,100 @@ export default function CategoriesPage() {
     setFormData({ name: "", description: "" })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name) {
       alert("Vul de categorienaam in")
       return
     }
 
-    if (editingCategory) {
-      setCategories(
-        categories.map((c) =>
-          c.id === editingCategory.id
-            ? { ...c, name: formData.name, description: formData.description }
-            : c
-        )
-      )
-    } else {
-      const newId = formData.name.toLowerCase().replace(/\s+/g, "-")
-      setCategories([
-        ...categories,
-        { id: newId, name: formData.name, description: formData.description },
-      ])
+    setActionLoading("submit")
+    try {
+      if (editingCategory) {
+        // Update existing category
+        const response = await fetch(`/api/categories?id=${editingCategory.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        })
+        if (response.ok) {
+          const updated = await response.json()
+          setCategories(
+            categories.map((c) => (c.id === editingCategory.id ? updated : c))
+          )
+        }
+      } else {
+        // Create new category
+        const newId = formData.name.toLowerCase().replace(/\s+/g, "-")
+        const response = await fetch("/api/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: newId, ...formData, active: true }),
+        })
+        if (response.ok) {
+          const created = await response.json()
+          setCategories([...categories, created])
+        }
+      }
+      handleCloseForm()
+    } catch (error) {
+      console.error("Error saving category:", error)
+    } finally {
+      setActionLoading(null)
     }
-    handleCloseForm()
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Weet u zeker dat u deze categorie wilt verwijderen?")) {
-      setCategories(categories.filter((c) => c.id !== id))
+      setActionLoading(id)
+      try {
+        const response = await fetch(`/api/categories?id=${id}`, {
+          method: "DELETE",
+        })
+        if (response.ok) {
+          setCategories(categories.filter((c) => c.id !== id))
+        }
+      } catch (error) {
+        console.error("Error deleting category:", error)
+      } finally {
+        setActionLoading(null)
+      }
+    }
+  }
+
+  const handleToggleActive = async (id: string) => {
+    const category = categories.find((c) => c.id === id)
+    if (!category) return
+
+    const newStatus = !category.active
+    const productCount = 0 // We'll show this in the warning
+
+    if (
+      !confirm(
+        `Weet u zeker dat u deze categorie en alle bijbehorende producten ${
+          newStatus ? "activeren" : "deactiveren"
+        } wilt?`
+      )
+    ) {
+      return
+    }
+
+    setActionLoading(id)
+    try {
+      const response = await fetch(`/api/categories/${id}/toggle-active`, {
+        method: "PATCH",
+      })
+
+      if (response.ok) {
+        const updatedCategory = await response.json()
+        setCategories(
+          categories.map((c) => (c.id === id ? updatedCategory : c))
+        )
+      }
+    } catch (error) {
+      console.error("Error toggling category active status:", error)
+    } finally {
+      setActionLoading(null)
     }
   }
 
@@ -138,46 +225,87 @@ export default function CategoriesPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((category) => (
-            <div
-              key={category.id}
-              className="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-shadow"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-semibold text-foreground text-lg">
-                    {category.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1">ID: {category.id}</p>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="bg-card rounded-lg border border-border p-12 text-center">
+            <p className="text-muted-foreground">Geen categorieën gevonden</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((category) => (
+              <div
+                key={category.id}
+                className="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-semibold text-foreground text-lg">
+                      {category.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">ID: {category.id}</p>
+                    <div className="mt-2">
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                        category.active
+                          ? "bg-green-500/10 text-green-600"
+                          : "bg-gray-500/10 text-gray-600"
+                      }`}>
+                        {category.active ? "Actief" : "Inactief"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6 line-clamp-2">
+                  {category.description || "Geen beschrijving"}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleToggleActive(category.id)}
+                    disabled={actionLoading === category.id}
+                    className="rounded-lg"
+                    title={category.active ? "Deactiveer categorie" : "Activeer categorie"}
+                  >
+                    {actionLoading === category.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : category.active ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenForm(category)}
+                    disabled={actionLoading === "submit"}
+                    className="flex-1 rounded-lg"
+                  >
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Bewerken
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(category.id)}
+                    disabled={actionLoading === category.id}
+                    className="flex-1 rounded-lg text-destructive hover:text-destructive"
+                  >
+                    {actionLoading === category.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
+                    Verwijderen
+                  </Button>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mb-6 line-clamp-2">
-                {category.description || "Geen beschrijving"}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleOpenForm(category)}
-                  className="flex-1 rounded-lg"
-                >
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Bewerken
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(category.id)}
-                  className="flex-1 rounded-lg text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Verwijderen
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

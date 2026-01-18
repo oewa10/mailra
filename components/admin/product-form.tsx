@@ -1,9 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { Product, categories } from "@/lib/products"
+import { useState, useEffect } from "react"
+import { Product } from "@/lib/products"
 import { Button } from "@/components/ui/button"
 import { Upload } from "lucide-react"
+
+interface Category {
+  id: string
+  name: string
+  active?: boolean
+}
 
 interface ProductFormProps {
   product?: Product | null
@@ -15,7 +21,7 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
   const [formData, setFormData] = useState<Omit<Product, "id"> & { id?: string }>({
     id: product?.id,
     name: product?.name || "",
-    category: product?.category || "stoelen",
+    category: product?.category || "",
     description: product?.description || "",
     dimensions: product?.dimensions || "",
     capacity: product?.capacity || "",
@@ -23,6 +29,31 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
   })
 
   const [imagePreview, setImagePreview] = useState<string>(product?.image || "")
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+
+  // Fetch categories from database on mount
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("/api/categories")
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data)
+        // Set default category if not set
+        if (!formData.category && data.length > 0) {
+          setFormData((prev) => ({ ...prev, category: data[0].id }))
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -86,7 +117,11 @@ export function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
             onChange={handleChange}
             className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             required
+            disabled={categoriesLoading}
           >
+            <option value="">
+              {categoriesLoading ? "Categorieën laden..." : "Selecteer een categorie"}
+            </option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}

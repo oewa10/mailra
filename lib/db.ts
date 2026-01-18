@@ -25,6 +25,7 @@ export async function initializeDatabase() {
         id VARCHAR(255) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         description TEXT,
+        active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -184,6 +185,35 @@ export async function deleteCategory(id: string) {
     return true
   } catch (error) {
     console.error('Error deleting category:', error)
+    return false
+  }
+}
+
+export async function toggleCategoryActive(id: string) {
+  try {
+    const result = await sql`
+      UPDATE categories 
+      SET active = NOT active, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING *
+    `
+    return result.rows[0]
+  } catch (error) {
+    console.error('Error toggling category active status:', error)
+    return null
+  }
+}
+
+export async function updateProductsCategoryActive(categoryId: string, active: boolean) {
+  try {
+    await sql`
+      UPDATE products 
+      SET active = ${active}, updated_at = CURRENT_TIMESTAMP
+      WHERE category = ${categoryId}
+    `
+    return true
+  } catch (error) {
+    console.error('Error updating products category active status:', error)
     return false
   }
 }
