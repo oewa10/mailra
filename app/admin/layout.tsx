@@ -21,18 +21,6 @@ export default function AdminLayout({
       {/* Add a spacer to prevent content from being hidden under the fixed header */}
       <div className="h-[72px]"></div>
       
-      {/* Mobile menu toggle */}
-      <div className="fixed top-24 left-4 z-30 lg:hidden">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setMobileMenuOpen(true)}
-          className="rounded-full shadow-md bg-card hover:bg-card/80"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-      
       <div className="flex pt-4">
         {/* Responsive Sidebar */}
         <AdminSidebar 
@@ -46,6 +34,18 @@ export default function AdminLayout({
         </div>
       </div>
       <Footer />
+      
+      {/* Mobile menu toggle - positioned at bottom */}
+      <div className="fixed bottom-6 right-6 z-30 lg:hidden">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setMobileMenuOpen(true)}
+          className="rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 h-14 w-14 flex items-center justify-center"
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
+      </div>
     </main>
   )
 }
