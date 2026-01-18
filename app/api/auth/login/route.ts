@@ -26,15 +26,18 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies()
     cookieStore.set('admin_session', user.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Login successful',
     })
+
+    return response
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(

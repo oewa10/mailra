@@ -22,20 +22,23 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       })
 
       const data = await response.json()
 
       if (!response.ok) {
         setError(data.error || "Login failed")
+        setLoading(false)
         return
       }
 
       // Redirect to admin dashboard
-      router.push("/admin")
+      setTimeout(() => {
+        router.push("/admin")
+      }, 100)
     } catch (err) {
       setError("An error occurred. Please try again.")
-    } finally {
       setLoading(false)
     }
   }
