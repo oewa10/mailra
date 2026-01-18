@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -20,7 +21,14 @@ export function Header() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5">
-            <span className="font-serif text-3xl tracking-tight text-primary">Mailra</span>
+            <Image
+              src="/logo.png"
+              alt="Mailra Logo"
+              width={120}
+              height={60}
+              className="h-14 w-auto"
+              priority
+            />
           </Link>
         </div>
         
@@ -63,7 +71,13 @@ export function Header() {
           <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-background px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-border">
             <div className="flex items-center justify-between">
               <Link href="/" className="-m-1.5 p-1.5" onClick={() => setMobileMenuOpen(false)}>
-                <span className="font-serif text-3xl tracking-tight text-primary">Mailra</span>
+                <Image
+                  src="/logo.png"
+                  alt="Mailra Logo"
+                  width={100}
+                  height={50}
+                  className="h-12 w-auto"
+                />
               </Link>
               <Button
                 variant="ghost"
