@@ -131,6 +131,15 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+          
+          <div className="mt-12 flex justify-center">
+            <Link href="/producten">
+              <Button size="lg" className="rounded-full px-8">
+                Bekijk alle producten
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
       
