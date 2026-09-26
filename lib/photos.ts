@@ -27,6 +27,7 @@ export const photos = {
       "Brede sfeerfoto van een complete Mailra-opstelling op locatie: gedekte tafels met onze stoelen, bloemen en verlichting, bij voorkeur in het gouden uur. Houd de linkerhelft rustig voor de titel.",
     format: "Liggend 16:9 · min. 2400 × 1350 px",
     alt: "Complete tafelopstelling van Mailra op een feestlocatie",
+    src: "/images/site/hero.webp",
   }),
   categoryStoelen: slot({
     id: "category-stoelen",
@@ -34,6 +35,7 @@ export const photos = {
     brief: "Rij van onze eigen stoelen in een echte opstelling (ceremonie of diner), dichtbij met een zachte achtergrond.",
     format: "Staand 4:5 · min. 1600 × 2000 px",
     alt: "Stoelen van Mailra opgesteld voor een ceremonie",
+    src: "/images/site/stoelen.webp",
   }),
   categoryTafels: slot({
     id: "category-tafels",
@@ -41,6 +43,7 @@ export const photos = {
     brief: "Gedekte tafel van ons met linnen, servies en bloemstuk, gefotografeerd op ooghoogte.",
     format: "Liggend 16:10 · min. 1600 × 1000 px",
     alt: "Gedekte tafel van Mailra met bloemstuk",
+    src: "/images/site/tafels.webp",
   }),
   categoryDecoratie: slot({
     id: "category-decoratie",
@@ -48,6 +51,7 @@ export const photos = {
     brief: "Detail van onze decoratie in een echte opstelling: bloemenboog, kandelaars of backdrop.",
     format: "Liggend 16:10 · min. 1600 × 1000 px",
     alt: "Decoratie van Mailra op een feest",
+    src: "/images/site/decoratie.webp",
   }),
   about: slot({
     id: "over-ons",
