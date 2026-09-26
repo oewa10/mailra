@@ -17,12 +17,14 @@ _Audit date: 26 September 2026. Method: read every public route and the SEO plum
 - **Brand assets:** Mailra monogram icons replace the v0 template favicons; a photographic share image with the brand font.
 - **Images and fixes:** event photos renamed and recompressed (`public/images/werk/`), unused assets removed. Contrast and form-label fixes bring accessibility to 100.
 
+**Update (post-launch):** the live domain briefly redirect-looped (`mailra.nl` ⇄ `www.mailra.nl`) because Vercel had `www` set as the Production domain while the app redirected `www → mailra.nl`. Fixed by making `mailra.nl` primary in Vercel. Deployment Protection was also blocking Googlebot (fine for a signed-in browser, 401 for a crawler) — now disabled. Sitemap is submitted and fetchable in Search Console.
+
 **Still to do (owner):**
-- Add `www.mailra.nl` as a domain in Vercel.
-- Set `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` on Vercel, verify in Search Console and Bing, and submit `https://mailra.nl/sitemap.xml`.
+- Verify in **Bing Webmaster Tools** too (separate from Google) and submit `https://mailra.nl/sitemap.xml` there.
 - Enter prices in the admin.
 - Add a "Caftans" category in the admin.
 - Fill in `siteConfig.social`.
+- Over the next few weeks: watch Search Console's Coverage/Indexing report to confirm pages actually get indexed, and Core Web Vitals once it has enough field data (~28 days).
 
 **Deliberately skipped for now:** product detail pages (§2.2), Phase 3 and Phase 4.
 
