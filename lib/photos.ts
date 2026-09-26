@@ -67,7 +67,15 @@ export const photos = {
     brief: "Gasten die proosten aan een door ons gestylede tafel.",
     format: "Staand 4:5 · min. 1600 × 2000 px",
     alt: "Gasten proosten aan een feestelijk gedekte tafel",
-    src: "/images/misc/misc (22).jpg",
+    src: "/images/werk/gasten-proosten-feesttafel.jpg",
+  }),
+  delivery: slot({
+    id: "over-ons-levering",
+    label: "Over ons — levering & opbouw",
+    brief: "Ons team dat de bus inlaadt en op locatie opbouwt, als bewijs van de volledige service.",
+    format: "Liggend 16:9 · min. 2000 × 1125 px",
+    alt: "Ons team laadt stoelen en tafels in de bus en bouwt ze op bij een landgoed voor een bruiloft",
+    src: "/images/werk/levering-opbouw-landgoed.jpg",
   }),
 }
 
@@ -79,7 +87,7 @@ export const gallery: PhotoSlot[] = [
     brief: "",
     format: "",
     alt: "Bruidstafel onder een bloemenboog",
-    src: "/images/misc/misc (20).jpg",
+    src: "/images/werk/bruidstafel-bloemenboog.jpg",
   },
   {
     id: "gallery-2",
@@ -87,7 +95,7 @@ export const gallery: PhotoSlot[] = [
     brief: "",
     format: "",
     alt: "Lange dinertafel bij kaarslicht met rozen",
-    src: "/images/misc/misc (13).jpg",
+    src: "/images/werk/dinertafel-kaarslicht-rozen.jpg",
   },
   {
     id: "gallery-3",
@@ -95,7 +103,7 @@ export const gallery: PhotoSlot[] = [
     brief: "",
     format: "",
     alt: "Taarttafel met pampasgras en rotan lantaarns",
-    src: "/images/misc/misc (8).jpg",
+    src: "/images/werk/sweet-table-pampasgras.jpg",
   },
   {
     id: "gallery-4",
@@ -103,6 +111,6 @@ export const gallery: PhotoSlot[] = [
     brief: "",
     format: "",
     alt: "Bruid op een loungebank met gele draperieën en bloemen",
-    src: "/images/misc/misc (2).jpg",
+    src: "/images/werk/lounge-draperieen-bloemen.jpg",
   },
 ]

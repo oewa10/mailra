@@ -1,24 +1,42 @@
 import type { MetadataRoute } from "next"
-import { siteConfig } from "@/lib/site-config"
 import { getPublicCatalog } from "@/lib/db"
+import { photos, gallery } from "@/lib/photos"
+import { absoluteUrl } from "@/lib/seo"
 
 export const revalidate = 3600
 
+const photoUrls = (...slots: { src?: string }[]) =>
+  slots.flatMap((slot) => (slot.src ? [absoluteUrl(encodeURI(slot.src))] : []))
+
+// Google ignores priority and changefreq; lastModified (when accurate) and images are what count.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${siteConfig.url}/`, changeFrequency: "weekly", priority: 1 },
-    { url: `${siteConfig.url}/producten`, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${siteConfig.url}/over-ons`, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${siteConfig.url}/contact`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteConfig.url}/verhuurbeleid`, changeFrequency: "yearly", priority: 0.4 },
+    {
+      url: absoluteUrl("/"),
+      images: photoUrls(photos.hero, photos.categoryStoelen, photos.categoryTafels, photos.categoryDecoratie, ...gallery),
+    },
+    { url: absoluteUrl("/producten") },
+    { url: absoluteUrl("/over-ons"), images: photoUrls(photos.about) },
+    { url: absoluteUrl("/contact"), images: photoUrls(photos.contact) },
+    { url: absoluteUrl("/verhuurbeleid") },
   ]
 
   try {
     const catalog = await getPublicCatalog()
-    const categoryRoutes: MetadataRoute.Sitemap = (catalog?.categories ?? []).map((c) => ({
-      url: `${siteConfig.url}/producten/${c.id}`,
-      changeFrequency: "weekly" as const,
-      priority: 0.6,
+    if (!catalog) return staticRoutes
+
+    const latest = catalog.categories.map((c) => c.updatedAt).sort().at(-1)
+    const catalogRoutes = new Set(["/", "/producten"])
+    for (const route of staticRoutes) {
+      if (latest && catalogRoutes.has(new URL(route.url).pathname)) route.lastModified = latest
+    }
+
+    const categoryRoutes: MetadataRoute.Sitemap = catalog.categories.map((c) => ({
+      url: absoluteUrl(`/producten/${c.id}`),
+      lastModified: c.updatedAt,
+      images: catalog.products
+        .filter((p) => p.category === c.id && p.image)
+        .map((p) => absoluteUrl(encodeURI(p.image))),
     }))
     return [...staticRoutes, ...categoryRoutes]
   } catch {

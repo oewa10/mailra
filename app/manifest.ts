@@ -6,13 +6,16 @@ export default function manifest(): MetadataRoute.Manifest {
     name: siteConfig.brandFull,
     short_name: siteConfig.brandShort,
     description: siteConfig.description,
+    lang: "nl-NL",
     start_url: "/",
     display: "standalone",
     background_color: "#FBF9F5",
     theme_color: "#283123",
     icons: [
-      { src: "/icon-light-32x32.png", sizes: "32x32", type: "image/png" },
-      { src: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      // The monogram sits well inside the safe zone, so the same art works as a maskable icon.
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   }
 }

@@ -1,12 +1,10 @@
 import Link from "next/link"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
 import { ProductGrid } from "@/components/product-grid"
 import { CategoryFilter } from "@/components/category-filter"
 import { Container, Section, Eyebrow } from "@/components/site/primitives"
 import { Button } from "@/components/ui/button"
-import type { Catalog, CatalogCategory } from "@/lib/db"
-import { siteConfig } from "@/lib/site-config"
+import type { Catalog, CatalogCategory, CatalogProduct } from "@/lib/db"
+import { BUSINESS_ID, JsonLd, absoluteUrl, breadcrumbJsonLd } from "@/lib/seo"
 
 const DEFAULT_LEAD =
   "Van elegante stoelen tot stijlvolle tafels en decoratieve accessoires — wij hebben alles om uw evenement compleet te maken."
@@ -21,18 +19,14 @@ export function CatalogView({
   const categories = catalog?.categories ?? []
   const products = (catalog?.products ?? []).filter((p) => !selected || p.category === selected.id)
 
-  const breadcrumbs = selected && {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Producten", item: `${siteConfig.url}/producten` },
-      { "@type": "ListItem", position: 2, name: selected.name, item: `${siteConfig.url}/producten/${selected.id}` },
-    ],
-  }
+  const path = selected ? `/producten/${selected.id}` : "/producten"
+  const breadcrumbs = breadcrumbJsonLd([
+    { name: "Producten", path: "/producten" },
+    ...(selected ? [{ name: selected.name, path }] : []),
+  ])
 
   return (
-    <main className="min-h-screen bg-canvas">
-      <Header />
+    <>
 
       <section
         className="bg-linen"
@@ -42,7 +36,7 @@ export function CatalogView({
           {selected ? (
             <nav aria-label="Kruimelpad" className="text-eyebrow">
               <Link href="/producten" className="link-underline hover:text-ink">
-                Collectie
+                Producten
               </Link>
               <span className="mx-2 text-ink-55" aria-hidden="true">
                 /
@@ -53,7 +47,7 @@ export function CatalogView({
             <Eyebrow>Verhuur</Eyebrow>
           )}
           <h1 className="text-display-2 mt-4 max-w-3xl text-ink">
-            {selected ? `${selected.name} huren` : "Meubilair, styling en decoratie huren"}
+            {selected ? `${selected.name} huren` : "Stoelen, tafels en decoratie huren"}
           </h1>
           <p className="text-lead mt-6 max-w-xl">{selected?.description || DEFAULT_LEAD}</p>
         </Container>
@@ -92,11 +86,41 @@ export function CatalogView({
         </Container>
       </section>
 
-      <Footer />
-
-      {breadcrumbs && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
-      )}
-    </main>
+      <JsonLd data={breadcrumbs} />
+      {products.some((p) => p.price != null) && <JsonLd data={offersJsonLd(products, path)} />}
+    </>
   )
+}
+
+/**
+ * Priced products as rental offers. Products without a price are left out: Google reports
+ * Product markup without an offer as an error. Each item points at its card on this page.
+ */
+function offersJsonLd(products: CatalogProduct[], path: string) {
+  const priced = products.filter((p) => p.price != null)
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: priced.map((product, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Product",
+        "@id": absoluteUrl(`${path}#${product.id}`),
+        name: product.name,
+        ...(product.description && { description: product.description }),
+        ...(product.image && { image: absoluteUrl(product.image) }),
+        ...(product.dimensions && { size: product.dimensions }),
+        offers: {
+          "@type": "Offer",
+          url: absoluteUrl(`${path}#${product.id}`),
+          price: product.price!.toFixed(2),
+          priceCurrency: "EUR",
+          availability: "https://schema.org/InStock",
+          businessFunction: "http://purl.org/goodrelations/v1#LeaseOut",
+          seller: { "@id": BUSINESS_ID },
+        },
+      },
+    })),
+  }
 }

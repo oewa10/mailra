@@ -17,7 +17,7 @@ export const MEDIA_PREFIX = '/media/products/'
 const VERSION_SQL = `floor(extract(epoch from p.updated_at) * 1000)::bigint`
 
 const PRODUCT_COLUMNS = `
-  p.id, p.name, p.category, p.description, p.dimensions, p.capacity, p.active,
+  p.id, p.name, p.category, p.description, p.dimensions, p.capacity, p.price, p.price_unit, p.active,
   p.created_at, p.updated_at,
   substr(p.image, 1, 5) = 'data:' AS image_inline,
   CASE WHEN substr(p.image, 1, 5) = 'data:' THEN NULL ELSE p.image END AS image_path,
@@ -46,6 +46,8 @@ function toProduct(row: any): AdminProduct {
     description: row.description ?? '',
     dimensions: row.dimensions ?? '',
     capacity: row.capacity ?? '',
+    price: row.price === null || row.price === undefined ? null : Number(row.price),
+    price_unit: row.price_unit ?? '',
     image: imageUrl(row),
     active: row.active !== false,
     created_at: iso(row.created_at),
@@ -102,12 +104,39 @@ async function insertWithUniqueId<T>(
 }
 
 // ---------------------------------------------------------------------------
+// Schema upgrades
+// ---------------------------------------------------------------------------
+
+let schemaReady: Promise<void> | null = null
+
+/**
+ * Adds columns introduced after a database was created (scripts/init-db.ts does the same), so a
+ * deploy works before anyone has run the script. Runs once per server instance; cheap no-op after.
+ */
+function ensureSchema() {
+  schemaReady ??= (async () => {
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS price NUMERIC(10, 2)`
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS price_unit VARCHAR(40)`
+  })().catch((error) => {
+    schemaReady = null
+    throw error
+  })
+  return schemaReady
+}
+
+/** sql.query for statements that read or write the product columns. */
+async function productQuery(text: string, params?: unknown[]) {
+  await ensureSchema()
+  return sql.query(text, params as any[])
+}
+
+// ---------------------------------------------------------------------------
 // Public catalog
 // ---------------------------------------------------------------------------
 
 export type CatalogProduct = Pick<
   AdminProduct,
-  'id' | 'name' | 'category' | 'description' | 'dimensions' | 'capacity' | 'image'
+  'id' | 'name' | 'category' | 'description' | 'dimensions' | 'capacity' | 'price' | 'price_unit' | 'image' | 'updated_at'
 >
 
 export type CatalogCategory = {
@@ -117,6 +146,8 @@ export type CatalogCategory = {
   productCount: number
   /** First product photo in the category, for tiles without dedicated artwork. */
   coverImage: string
+  /** ISO time of the latest change to the category or any of its visible products. */
+  updatedAt: string
 }
 
 export type Catalog = { categories: CatalogCategory[]; products: CatalogProduct[] }
@@ -131,19 +162,20 @@ export const getPublicCatalog = cache(async (): Promise<Catalog | null> => {
   if (!process.env.POSTGRES_URL) return null
 
   const [productRows, categoryRows] = await Promise.all([
-    sql.query(`
+    productQuery(`
       SELECT ${PRODUCT_COLUMNS}
       FROM products p
       LEFT JOIN categories c ON c.id = p.category
       WHERE p.active AND c.active IS NOT FALSE
       ORDER BY p.created_at DESC, p.name ASC
     `),
-    sql`SELECT id, name, description FROM categories WHERE active ORDER BY name ASC`,
+    sql`SELECT id, name, description, updated_at FROM categories WHERE active ORDER BY name ASC`,
   ])
 
   const products: CatalogProduct[] = productRows.rows.map((row) => {
-    const { id, name, category, description, dimensions, capacity, image } = toProduct(row)
-    return { id, name, category, description, dimensions, capacity, image }
+    const { id, name, category, description, dimensions, capacity, price, price_unit, image, updated_at } =
+      toProduct(row)
+    return { id, name, category, description, dimensions, capacity, price, price_unit, image, updated_at }
   })
 
   const categories: CatalogCategory[] = categoryRows.rows
@@ -155,6 +187,7 @@ export const getPublicCatalog = cache(async (): Promise<Catalog | null> => {
         description: (row.description as string) ?? '',
         productCount: inCategory.length,
         coverImage: inCategory.find((p) => p.image)?.image ?? '',
+        updatedAt: [iso(row.updated_at), ...inCategory.map((p) => p.updated_at)].sort().at(-1)!,
       }
     })
     .filter((c) => c.productCount > 0)
@@ -167,12 +200,12 @@ export const getPublicCatalog = cache(async (): Promise<Catalog | null> => {
 // ---------------------------------------------------------------------------
 
 export async function getAdminProducts(): Promise<AdminProduct[]> {
-  const result = await sql.query(`SELECT ${PRODUCT_COLUMNS} FROM products p ORDER BY p.created_at DESC`)
+  const result = await productQuery(`SELECT ${PRODUCT_COLUMNS} FROM products p ORDER BY p.created_at DESC`)
   return result.rows.map(toProduct)
 }
 
 export async function getProductById(id: string): Promise<AdminProduct | null> {
-  const result = await sql.query(`SELECT ${PRODUCT_COLUMNS} FROM products p WHERE p.id = $1`, [id])
+  const result = await productQuery(`SELECT ${PRODUCT_COLUMNS} FROM products p WHERE p.id = $1`, [id])
   return result.rows[0] ? toProduct(result.rows[0]) : null
 }
 
@@ -193,6 +226,8 @@ type ProductInput = {
   description: string
   dimensions: string
   capacity: string
+  price: number | null
+  price_unit: string
   image: string
   active?: boolean
 }
@@ -201,14 +236,17 @@ export async function createProduct(input: ProductInput): Promise<AdminProduct> 
   // A media URL only makes sense for the product it belongs to.
   const image = input.image.startsWith(MEDIA_PREFIX) ? '' : input.image
   return insertWithUniqueId('products', input.name, async (id) => {
-    const result = await sql.query(
+    const result = await productQuery(
       `WITH p AS (
-         INSERT INTO products (id, name, category, description, dimensions, capacity, image, active)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         INSERT INTO products (id, name, category, description, dimensions, capacity, image, active, price, price_unit)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING *
        )
        SELECT ${PRODUCT_COLUMNS} FROM p`,
-      [id, input.name, input.category, input.description, input.dimensions, input.capacity, image, input.active ?? true],
+      [
+        id, input.name, input.category, input.description, input.dimensions, input.capacity, image,
+        input.active ?? true, input.price, input.price_unit,
+      ],
     )
     return toProduct(result.rows[0])
   })
@@ -217,12 +255,13 @@ export async function createProduct(input: ProductInput): Promise<AdminProduct> 
 export async function updateProduct(id: string, input: ProductInput): Promise<AdminProduct | null> {
   // The editor echoes the current media URL back when the photo wasn't touched: keep the stored bytes.
   const keepImage = input.image.startsWith(MEDIA_PREFIX)
-  const result = await sql.query(
+  const result = await productQuery(
     `WITH p AS (
        UPDATE products
        SET name = $2, category = $3, description = $4, dimensions = $5, capacity = $6,
            image = CASE WHEN $7::boolean THEN image ELSE $8 END,
            active = COALESCE($9::boolean, active),
+           price = $10, price_unit = $11,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $1
        RETURNING *
@@ -230,14 +269,14 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Ad
      SELECT ${PRODUCT_COLUMNS} FROM p`,
     [
       id, input.name, input.category, input.description, input.dimensions, input.capacity,
-      keepImage, keepImage ? null : input.image, input.active ?? null,
+      keepImage, keepImage ? null : input.image, input.active ?? null, input.price, input.price_unit,
     ],
   )
   return result.rows[0] ? toProduct(result.rows[0]) : null
 }
 
 export async function setProductActive(id: string, active: boolean): Promise<AdminProduct | null> {
-  const result = await sql.query(
+  const result = await productQuery(
     `WITH p AS (
        UPDATE products SET active = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *
      )
@@ -371,7 +410,7 @@ export async function getAdminStats(): Promise<AdminStats> {
 }
 
 export async function getRecentlyUpdatedProducts(limit = 5): Promise<AdminProduct[]> {
-  const result = await sql.query(
+  const result = await productQuery(
     `SELECT ${PRODUCT_COLUMNS} FROM products p ORDER BY p.updated_at DESC LIMIT $1`,
     [limit],
   )

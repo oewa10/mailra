@@ -28,6 +28,7 @@ import { ProductEditor } from "@/components/admin/product-editor"
 import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { apiRequest, errorMessage } from "@/lib/admin/api-client"
 import type { AdminCategory, AdminProduct } from "@/lib/admin/types"
+import { formatPrice } from "@/lib/price"
 import { cn } from "@/lib/utils"
 
 export type ProductStatusFilter = "all" | "active" | "hidden"
@@ -401,6 +402,7 @@ export function ProductsManager({
                   <th scope="col" className="py-3 pr-4 font-medium">Product</th>
                   <th scope="col" className="py-3 pr-4 font-medium">Categorie</th>
                   <th scope="col" className="hidden py-3 pr-4 font-medium lg:table-cell">Afmetingen</th>
+                  <th scope="col" className="hidden py-3 pr-4 font-medium md:table-cell">Prijs</th>
                   <th scope="col" className="py-3 pr-4 font-medium">Zichtbaar</th>
                   <th scope="col" className="w-12 py-3 pr-3">
                     <span className="sr-only">Acties</span>
@@ -450,6 +452,9 @@ export function ProductsManager({
                     </td>
                     <td className="py-3 pr-4 text-ink-70">{categoryNames.get(product.category) ?? product.category}</td>
                     <td className="hidden py-3 pr-4 text-ink-70 lg:table-cell">{product.dimensions || "—"}</td>
+                    <td className="hidden py-3 pr-4 tabular-nums text-ink-70 md:table-cell">
+                      {product.price == null ? "—" : formatPrice(product.price)}
+                    </td>
                     <td className="py-3 pr-4" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-2">
                         <Switch

@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { buildWhatsAppLink } from "@/lib/site-config"
+import { formatDutchDate } from "@/lib/utils"
 
 interface ContactPageFormProps {
   preselectedProduct?: string
@@ -55,21 +56,23 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
     const location = String(data.get("location") || "")
     const message = String(data.get("message") || "")
 
-    const lines = [
-      `Hallo Mailra! Ik heb een offerte-aanvraag via de website.`,
-      ``,
-      `Naam: ${firstName} ${lastName}`.trim(),
-      `E-mail: ${email}`,
-      phone && `Telefoon: ${phone}`,
-      eventDate && `Datum evenement: ${eventDate}`,
+    const fullName = `${firstName} ${lastName}`.trim()
+
+    // Built as paragraphs (not a label: value dump), joined with blank lines so it reads like a
+    // message someone would actually send. The event details stay a short list underneath —
+    // useful to scan at a glance, but no longer the whole message.
+    const intro = `Hoi Mailra! Mijn naam is ${fullName} en ik wil graag een offerte aanvragen.`
+    const detailLines = [
       eventType && `Type evenement: ${eventTypeLabels[eventType] || eventType}`,
+      eventDate && `Datum: ${formatDutchDate(eventDate)}`,
       location && `Locatie: ${location}`,
       guestCount && `Aantal gasten: ${guestCount}`,
-      ``,
-      `Bericht: ${message}`,
-    ].filter(Boolean)
+    ].filter((line): line is string => Boolean(line))
+    const details = detailLines.length > 0 ? `Details:\n${detailLines.join("\n")}` : ""
+    const contactLine = `Je kunt mij bereiken via ${email}${phone ? ` of ${phone}` : ""}.`
+    const paragraphs = [intro, message, details, contactLine].filter((p): p is string => Boolean(p?.trim()))
 
-    const url = buildWhatsAppLink(lines.join("\n"))
+    const url = buildWhatsAppLink(paragraphs.join("\n\n"))
     setFallbackUrl(url)
     window.open(url, "_blank", "noopener,noreferrer")
     setIsSubmitted(true)
@@ -124,7 +127,7 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Telefoonnummer</Label>
-          <Input id="phone" name="phone" type="tel" placeholder="+31 6 1234 5678" className="rounded-[2px]" />
+          <Input id="phone" name="phone" type="tel" placeholder="06 12345678" className="rounded-[2px]" />
         </div>
       </div>
 
@@ -136,7 +139,7 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
         <div className="space-y-2">
           <Label htmlFor="eventType">Type evenement</Label>
           <Select name="eventType" value={eventType} onValueChange={setEventType}>
-            <SelectTrigger className="w-full rounded-[2px]">
+            <SelectTrigger id="eventType" className="w-full rounded-[2px]">
               <SelectValue placeholder="Selecteer type" />
             </SelectTrigger>
             <SelectContent>
@@ -157,7 +160,7 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
       <div className="space-y-2">
         <Label htmlFor="guestCount">Aantal gasten (geschat)</Label>
         <Select name="guestCount" value={guestCount} onValueChange={setGuestCount}>
-          <SelectTrigger className="w-full rounded-[2px]">
+          <SelectTrigger id="guestCount" className="w-full rounded-[2px]">
             <SelectValue placeholder="Selecteer aantal" />
           </SelectTrigger>
           <SelectContent>

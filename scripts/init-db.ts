@@ -57,6 +57,11 @@ async function initializeDatabase() {
     await sql`UPDATE categories SET active = true WHERE active IS NULL`
     console.log('✓ Visibility columns')
 
+    // Rental prices (lib/db.ts also adds these on first use).
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS price NUMERIC(10, 2)`
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS price_unit VARCHAR(40)`
+    console.log('✓ Price columns')
+
     // Category ids used to be allowed longer than the column that references them.
     await sql`ALTER TABLE products ALTER COLUMN category TYPE VARCHAR(255)`
 

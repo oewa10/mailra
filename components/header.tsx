@@ -189,8 +189,6 @@ export function Header() {
           </div>
         </nav>
       </div>
-      {/* Target of the layout's skip link: the first thing after the navigation on every public page. */}
-      <div id="main-content" tabIndex={-1} className="outline-none" />
     </>
   )
 }
