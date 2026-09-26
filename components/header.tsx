@@ -112,9 +112,9 @@ export function Header() {
           </div>
 
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <Link href="/contact">
-              <Button className="rounded-[2px] px-6">Offerte Aanvragen</Button>
-            </Link>
+            <Button className="rounded-[2px] px-6" asChild>
+              <Link href="/contact">Offerte Aanvragen</Link>
+            </Button>
           </div>
         </nav>
       </header>
@@ -163,14 +163,16 @@ export function Header() {
               mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
-            <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full rounded-[2px] py-6 text-base">
+            <Button className="w-full rounded-[2px] py-6 text-base" asChild>
+              <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
                 Offerte Aanvragen
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </nav>
       </div>
+      {/* Target of the layout's skip link: the first thing after the navigation on every public page. */}
+      <div id="main-content" tabIndex={-1} className="outline-none" />
     </>
   )
 }

@@ -4,6 +4,18 @@ import { z } from "zod"
 // ~1.5 MB of base64; client-side resizing keeps real uploads far below this.
 const MAX_IMAGE_LENGTH = 2_000_000
 
+// Uploaded photo, or a same-site path (a file in /public or the product's own media URL echoed
+// back). Remote and protocol-relative URLs are refused: next/image would fail to render them.
+const DATA_URL = /^data:image\/(?:webp|jpeg|png|avif);base64,[A-Za-z0-9+/]+={0,2}$/
+const LOCAL_PATH = /^\/(?![/\\])[\w\-./%() ]+$/
+
+function isAllowedImage(value: string) {
+  return value === "" || DATA_URL.test(value) || (LOCAL_PATH.test(value) && !value.includes(".."))
+}
+
+// Largest legitimate body: a product with a photo at the image limit.
+const MAX_BODY_BYTES = 2_200_000
+
 const optionalText = (max: number) =>
   z
     .string()
@@ -22,10 +34,7 @@ export const productSchema = z.object({
     .max(MAX_IMAGE_LENGTH, "De afbeelding is te groot")
     .nullish()
     .transform((v) => v ?? "")
-    .refine(
-      (v) => v === "" || v.startsWith("/") || v.startsWith("https://") || /^data:image\/(webp|jpeg|png|avif);base64,/.test(v),
-      "Ongeldige afbeelding",
-    ),
+    .refine(isAllowedImage, "Ongeldige afbeelding"),
   active: z.boolean().optional(),
 })
 
@@ -52,9 +61,20 @@ export async function parseJson<T extends z.ZodTypeAny>(
   request: Request,
   schema: T,
 ): Promise<Parsed<z.infer<T>>> {
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return { error: NextResponse.json({ error: "Ongeldige aanvraag" }, { status: 415 }) }
+  }
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
+    return { error: NextResponse.json({ error: "De gegevens zijn te groot." }, { status: 413 }) }
+  }
+
   let body: unknown
   try {
-    body = await request.json()
+    const text = await request.text()
+    if (text.length > MAX_BODY_BYTES) {
+      return { error: NextResponse.json({ error: "De gegevens zijn te groot." }, { status: 413 }) }
+    }
+    body = JSON.parse(text)
   } catch {
     return { error: NextResponse.json({ error: "Ongeldige aanvraag" }, { status: 400 }) }
   }

@@ -3,12 +3,16 @@
 export const SESSION_COOKIE = "admin_session"
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 7
 
-export type Session = { uid: string; email: string; exp: number }
+/** `pv` fingerprints the password the session was issued under; see passwordVersion() in lib/db. */
+export type Session = { uid: string; email: string; pv: string; exp: number }
 
 const encoder = new TextEncoder()
 
 function getSecret(): string | null {
-  return process.env.ADMIN_SESSION_SECRET || process.env.POSTGRES_URL || null
+  const secret = process.env.ADMIN_SESSION_SECRET
+  if (secret && secret.length >= 32) return secret
+  if (secret) console.warn("ADMIN_SESSION_SECRET is shorter than 32 characters; falling back to POSTGRES_URL")
+  return process.env.POSTGRES_URL || null
 }
 
 function toBase64Url(bytes: Uint8Array): string {
@@ -35,11 +39,11 @@ async function getKey(secret: string) {
   )
 }
 
-export async function createSessionToken(uid: string, email: string): Promise<string> {
+export async function createSessionToken(uid: string, email: string, pv: string): Promise<string> {
   const secret = getSecret()
   if (!secret) throw new Error("ADMIN_SESSION_SECRET (or POSTGRES_URL) is not configured")
 
-  const session: Session = { uid, email, exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE }
+  const session: Session = { uid, email, pv, exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE }
   const payload = toBase64Url(encoder.encode(JSON.stringify(session)))
   const signature = await crypto.subtle.sign("HMAC", await getKey(secret), encoder.encode(payload))
   return `${payload}.${toBase64Url(new Uint8Array(signature))}`
@@ -62,7 +66,7 @@ export async function verifySessionToken(token: string | undefined | null): Prom
     if (!valid) return null
 
     const session = JSON.parse(new TextDecoder().decode(fromBase64Url(payload))) as Session
-    if (typeof session.uid !== "string" || typeof session.exp !== "number") return null
+    if (typeof session.uid !== "string" || typeof session.pv !== "string" || typeof session.exp !== "number") return null
     if (session.exp < Math.floor(Date.now() / 1000)) return null
     return session
   } catch {

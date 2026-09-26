@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Container, Eyebrow, Hairline } from "@/components/site/primitives"
@@ -146,9 +147,9 @@ export default function VerhuurbeleidPage() {
           <p className="mt-16 border-t border-hairline pt-8 text-sm text-ink-55">
             Door een reservering te maken bij {siteConfig.brandFull}, gaat u akkoord met
             dit verhuurbeleid. Vragen? Neem gerust{" "}
-            <a href="/contact" className="link-underline text-gold-ink">
+            <Link href="/contact" className="link-underline text-gold-ink">
               contact met ons op
-            </a>
+            </Link>
             .
           </p>
         </Container>

@@ -1,4 +1,4 @@
-export function slugify(value: string): string {
+export function slugify(value: string, maxLength = 80): string {
   return (
     value
       .normalize("NFKD")
@@ -6,7 +6,8 @@ export function slugify(value: string): string {
       .toLowerCase()
       .replace(/&/g, " en ")
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 80) || "item"
+      .replace(/^-+/, "")
+      .slice(0, maxLength)
+      .replace(/-+$/, "") || "item"
   )
 }

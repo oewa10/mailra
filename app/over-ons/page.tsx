@@ -122,12 +122,12 @@ export default function AboutPage() {
               </div>
 
               <div className="mt-10">
-                <Link href="/contact">
-                  <Button className="rounded-[2px] px-8">
+                <Button className="rounded-[2px] px-8" asChild>
+                  <Link href="/contact">
                     Neem Contact Op
                     <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
 
@@ -166,20 +166,20 @@ export default function AboutPage() {
             u graag bij het realiseren van uw dromen.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/contact">
-              <Button size="lg" variant="secondary" className="rounded-[2px] px-8">
+            <Button size="lg" variant="secondary" className="rounded-[2px] px-8" asChild>
+              <Link href="/contact">
                 Vraag Offerte Aan
-              </Button>
-            </Link>
-            <Link href="/producten">
-              <Button
+              </Link>
+            </Button>
+            <Button
                 size="lg"
                 variant="outline"
                 className="rounded-[2px] border-canvas/30 bg-transparent px-8 text-canvas hover:bg-canvas/10 hover:text-canvas"
-              >
-                Bekijk Producten
-              </Button>
-            </Link>
+               asChild>
+              <Link href="/producten">
+              Bekijk Producten
+              </Link>
+            </Button>
           </div>
         </Container>
       </section>

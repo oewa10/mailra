@@ -64,8 +64,11 @@ function toCategory(row: any): AdminCategory {
   }
 }
 
+// products.category is VARCHAR(50) on existing databases; leave room for a "-12" suffix.
+const MAX_ID_LENGTH = { products: 80, categories: 46 }
+
 async function uniqueId(table: 'products' | 'categories', name: string): Promise<string> {
-  const base = slugify(name)
+  const base = slugify(name, MAX_ID_LENGTH[table])
   const pattern = `${base}-%`
   const result =
     table === 'products'
@@ -379,37 +382,67 @@ export async function getRecentlyUpdatedProducts(limit = 5): Promise<AdminProduc
 // Admin authentication
 // ---------------------------------------------------------------------------
 
-// Compared against when the e-mail is unknown, so response time doesn't reveal which accounts exist.
-const DUMMY_HASH = '$2b$10$ayI6suTvIPWPcr91owVwP.xIOyfDiPCLuzd/geViqs9K1t7cCDL.O'
+const BCRYPT_COST = 12
 
-export async function getAdminByEmail(email: string) {
-  const result = await sql`SELECT * FROM admin_users WHERE lower(email) = lower(${email.trim()})`
-  return result.rows[0] ?? null
+// Compared against when the e-mail is unknown, so response time doesn't reveal which accounts exist.
+// Must use the same cost as real hashes, or unknown addresses answer measurably faster.
+const DUMMY_HASH = '$2b$12$ALGOEQ896tJz7I8MEExhzu9tUKxi7hMJDVvNP8mkukMDs4vVh6VQ2'
+
+type AdminUser = { id: string; email: string; password_hash: string }
+
+/**
+ * Fingerprint of the current password hash, stored in the session. Changing or resetting the
+ * password changes it, which signs out every session issued before.
+ */
+export function passwordVersion(passwordHash: string) {
+  return createHash('sha256').update(passwordHash).digest('base64url').slice(0, 16)
 }
 
-export async function verifyAdminPassword(email: string, password: string) {
+export async function getAdminByEmail(email: string): Promise<AdminUser | null> {
+  const result = await sql`
+    SELECT id, email, password_hash FROM admin_users WHERE lower(email) = lower(${email.trim()})
+  `
+  return (result.rows[0] as AdminUser) ?? null
+}
+
+/** Current password version for a session check; null when the account no longer exists. */
+export async function getAdminPasswordVersion(userId: string): Promise<string | null> {
+  const result = await sql`SELECT password_hash FROM admin_users WHERE id = ${userId}`
+  return result.rows[0] ? passwordVersion(result.rows[0].password_hash) : null
+}
+
+export async function verifyAdminPassword(email: string, password: string): Promise<AdminUser | null> {
   const user = await getAdminByEmail(email)
   const isValid = await bcrypt.compare(password, user?.password_hash ?? DUMMY_HASH)
-  return user && isValid ? user : null
+  if (!user || !isValid) return null
+
+  // Accounts hashed at a lower cost answer faster than unknown e-mails (which hit DUMMY_HASH),
+  // revealing that they exist. Upgrade them the first time the right password is given.
+  if (bcrypt.getRounds(user.password_hash) < BCRYPT_COST) {
+    const upgraded = await bcrypt.hash(password, BCRYPT_COST)
+    await sql`UPDATE admin_users SET password_hash = ${upgraded} WHERE id = ${user.id}`
+    return { ...user, password_hash: upgraded }
+  }
+  return user
 }
 
 export async function changeAdminPassword(
   userId: string,
   currentPassword: string,
   newPassword: string,
-): Promise<'ok' | 'wrong-password' | 'not-found'> {
-  const result = await sql`SELECT password_hash FROM admin_users WHERE id = ${userId}`
-  const user = result.rows[0]
-  if (!user) return 'not-found'
-  if (!(await bcrypt.compare(currentPassword, user.password_hash))) return 'wrong-password'
+): Promise<{ status: 'ok'; user: AdminUser } | { status: 'wrong-password' | 'not-found' }> {
+  const result = await sql`SELECT id, email, password_hash FROM admin_users WHERE id = ${userId}`
+  const user = result.rows[0] as AdminUser | undefined
+  if (!user) return { status: 'not-found' }
+  if (!(await bcrypt.compare(currentPassword, user.password_hash))) return { status: 'wrong-password' }
 
-  const passwordHash = await bcrypt.hash(newPassword, 12)
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_COST)
   await sql`
     UPDATE admin_users SET password_hash = ${passwordHash}, updated_at = CURRENT_TIMESTAMP
     WHERE id = ${userId}
   `
   await sql`DELETE FROM password_reset_tokens WHERE user_id = ${userId}`
-  return 'ok'
+  return { status: 'ok', user: { ...user, password_hash: passwordHash } }
 }
 
 function hashToken(token: string) {
@@ -419,30 +452,29 @@ function hashToken(token: string) {
 export async function createPasswordResetToken(userId: string): Promise<string> {
   const token = randomBytes(32).toString('base64url')
   const id = `reset_${randomBytes(8).toString('hex')}`
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
 
   await sql`DELETE FROM password_reset_tokens WHERE user_id = ${userId}`
   await sql`
     INSERT INTO password_reset_tokens (id, user_id, token, expires_at)
-    VALUES (${id}, ${userId}, ${hashToken(token)}, ${expiresAt})
+    VALUES (${id}, ${userId}, ${hashToken(token)}, NOW() + INTERVAL '1 hour')
   `
   return token
 }
 
-export async function verifyResetToken(token: string) {
+/**
+ * Sets a new password with a reset token. Consuming the token and changing the password happen
+ * in one statement, so a token can never be used twice, even by concurrent requests.
+ */
+export async function resetPasswordWithToken(token: string, newPassword: string): Promise<boolean> {
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_COST)
   const result = await sql`
-    SELECT * FROM password_reset_tokens
-    WHERE token = ${hashToken(token)} AND expires_at > NOW()
-  `
-  return result.rows[0] ?? null
-}
-
-export async function resetAdminPassword(userId: string, newPassword: string) {
-  const passwordHash = await bcrypt.hash(newPassword, 12)
-  await sql`
+    WITH used AS (
+      DELETE FROM password_reset_tokens
+      WHERE token = ${hashToken(token)} AND expires_at > NOW()
+      RETURNING user_id
+    )
     UPDATE admin_users SET password_hash = ${passwordHash}, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ${userId}
+    WHERE id IN (SELECT user_id FROM used)
   `
-  await sql`DELETE FROM password_reset_tokens WHERE user_id = ${userId}`
-  return true
+  return (result.rowCount ?? 0) > 0
 }

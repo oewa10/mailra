@@ -9,7 +9,7 @@ async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS products (
         id VARCHAR(255) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        category VARCHAR(50) NOT NULL,
+        category VARCHAR(255) NOT NULL,
         description TEXT,
         dimensions VARCHAR(255),
         capacity VARCHAR(255),
@@ -56,6 +56,18 @@ async function initializeDatabase() {
     await sql`UPDATE products SET active = true WHERE active IS NULL`
     await sql`UPDATE categories SET active = true WHERE active IS NULL`
     console.log('✓ Visibility columns')
+
+    // Category ids used to be allowed longer than the column that references them.
+    await sql`ALTER TABLE products ALTER COLUMN category TYPE VARCHAR(255)`
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS auth_attempts (
+        bucket CHAR(43) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS auth_attempts_bucket_idx ON auth_attempts (bucket, created_at)`
+    console.log('✓ Login rate-limit table')
 
     await sql`CREATE INDEX IF NOT EXISTS products_category_idx ON products (category)`
     await sql`CREATE INDEX IF NOT EXISTS products_created_at_idx ON products (created_at DESC)`

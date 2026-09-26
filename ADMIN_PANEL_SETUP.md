@@ -8,13 +8,14 @@ See `ADMIN_REDESIGN_PLAN.md` for the audit and design rationale.
 - URL: `/admin` (redirects to `/admin/login` when signed out)
 - Screens: **Overzicht** (dashboard), **Producten**, **Categorieën**, **Account**
 - Sessions last 7 days; sign out from the sidebar.
+- Changing or resetting the password signs out every other device immediately.
 
 ## Environment variables
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `POSTGRES_URL` (and the other Vercel Postgres vars) | yes | Database |
-| `ADMIN_SESSION_SECRET` | recommended | Signs the admin session cookie. Any long random string, e.g. `openssl rand -base64 32`. Falls back to `POSTGRES_URL` if unset. |
+| `ADMIN_SESSION_SECRET` | recommended | Signs the admin session cookie. At least 32 characters, e.g. `openssl rand -base64 32`. Falls back to `POSTGRES_URL` if unset or shorter. |
 | `NEXT_PUBLIC_BASE_URL` | optional | Base URL used in password-reset links (defaults to the request origin). |
 
 ## First-time setup
@@ -25,6 +26,26 @@ ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='a long passphrase' npx tsx scripts/c
 ```
 
 Then sign in and change the password under **Account** if you used a temporary one.
+
+## Security
+
+- **Login throttling:** 8 wrong passwords for one account from one address, 30 from one address
+  in total, or 50 for one account from anywhere, within 15 minutes, block further attempts
+  (HTTP 429) until the window passes. Reset-link requests are limited to 3 per address per
+  hour. Attempts are stored hashed in `auth_attempts`; if that table is unreachable the checks
+  are skipped rather than locking you out.
+- **Sessions** are signed cookies bound to the current password. The server checks every admin
+  request against the database, so a leaked cookie stops working after a password change.
+- **Requests from other sites** that try to change data are refused (Origin / Sec-Fetch-Site
+  check), and API bodies must be JSON under ~2 MB.
+- Passwords are hashed with bcrypt (cost 12); older, weaker hashes are upgraded at the next login.
+- Reset links are single-use, expire after an hour and are stored only as a hash.
+- Every page is served with `X-Frame-Options`, `nosniff`, a referrer policy and a basic CSP;
+  `/admin` and `/api` are marked `noindex` and API responses are never cached.
+
+After deploying this version, run `npx tsx scripts/init-db.ts` once more: it widens
+`products.category` and creates the `auth_attempts` table (the app also creates that table on
+first use). Everyone has to log in again once, because sessions now carry a password fingerprint.
 
 ## Password reset
 

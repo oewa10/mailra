@@ -113,12 +113,12 @@ export default async function HomePage() {
                   bruiloften, feesten en zakelijke evenementen — door heel Nederland.
                 </p>
                 <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <Link href="/producten">
-                    <Button size="lg" className="group w-full rounded-[2px] px-8 sm:w-auto">
+                  <Button size="lg" className="group w-full rounded-[2px] px-8 sm:w-auto" asChild>
+                    <Link href="/producten">
                       Bekijk de collectie
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                   <Link href="/contact" className="link-underline text-sm font-medium text-canvas">
                     Vraag een offerte aan
                   </Link>
@@ -202,12 +202,12 @@ export default async function HomePage() {
           )}
 
           <div className="mt-14 flex justify-center">
-            <Link href="/producten">
-              <Button size="lg" variant="outline" className="group rounded-[2px] px-8">
+            <Button size="lg" variant="outline" className="group rounded-[2px] px-8" asChild>
+              <Link href="/producten">
                 Bekijk alle producten
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </Container>
       </Section>
@@ -312,7 +312,7 @@ export default async function HomePage() {
               </div>
 
               <a
-                href="https://wa.me/31612345678"
+                href={`https://wa.me/${siteConfig.whatsapp.number}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-10 inline-flex items-center gap-3 rounded-[2px] bg-[#25D366] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"

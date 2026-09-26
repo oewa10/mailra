@@ -1,7 +1,9 @@
+import Link from "next/link"
 import { Phone, Mail, Clock, MapPin } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { ContactPageForm } from "@/components/contact-page-form"
+import { Suspense } from "react"
+import { ContactPageForm, ContactPageFormFromUrl } from "@/components/contact-page-form"
 import { Container, Eyebrow, Hairline } from "@/components/site/primitives"
 import {
   Accordion,
@@ -74,13 +76,7 @@ const faqs = [
   },
 ]
 
-export default async function ContactPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ product?: string }>
-}) {
-  const { product } = await searchParams
-
+export default function ContactPage() {
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -127,7 +123,10 @@ export default async function ContactPage({
                 zodat u het direct kunt versturen.
               </p>
               <div className="mt-8">
-                <ContactPageForm preselectedProduct={product} />
+                {/* Static page: the ?product= prefill is read in the browser. */}
+                <Suspense fallback={<ContactPageForm />}>
+                  <ContactPageFormFromUrl />
+                </Suspense>
               </div>
             </div>
 
@@ -205,9 +204,9 @@ export default async function ContactPage({
 
           <p className="mt-8 text-center text-sm text-ink-55">
             Meer details?{" "}
-            <a href="/verhuurbeleid" className="link-underline text-gold-ink">
+            <Link href="/verhuurbeleid" className="link-underline text-gold-ink">
               Bekijk het volledige verhuurbeleid
-            </a>
+            </Link>
           </p>
         </Container>
       </section>

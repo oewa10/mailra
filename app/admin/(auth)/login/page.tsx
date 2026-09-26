@@ -46,8 +46,15 @@ function LoginForm() {
     }
   }
 
+  const expired = searchParams.get("reden") === "verlopen"
+
   return (
     <form onSubmit={handleLogin} className="space-y-5">
+      {expired && !error && (
+        <p role="status" className="border border-hairline bg-linen/60 p-3 text-sm text-ink-70">
+          Uw sessie is beëindigd, bijvoorbeeld omdat het wachtwoord is gewijzigd. Log opnieuw in.
+        </p>
+      )}
       <div>
         <Label htmlFor="email" className="mb-2 block text-sm text-ink">
           E-mailadres

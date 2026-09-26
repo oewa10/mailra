@@ -22,12 +22,12 @@ export default function NotFound() {
             homepage of bekijk onze collectie.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/">
-              <Button className="group rounded-[2px] px-8">
+            <Button className="group rounded-[2px] px-8" asChild>
+              <Link href="/">
                 Naar de homepage
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Link href="/producten" className="link-underline text-sm font-medium text-ink">
               Bekijk producten
             </Link>
