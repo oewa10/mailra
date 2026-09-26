@@ -103,3 +103,11 @@ When updating a product, send the `image` value you received back unchanged to k
 stored photo, a new `data:image/...` URL to replace it, or `""` to remove it.
 
 Public (no session): `GET /media/products/[id]/[version]` serves a product photo.
+
+## Site photos (not products)
+
+Editorial photos on the public pages (homepage hero, category tiles, gallery, Over ons,
+Contact) are listed in `lib/photos.ts`, each with a short brief of what to photograph and the
+minimum size. A slot without `src` shows a labelled "Foto volgt" placeholder with that brief.
+To add a photo, put the file in `public/images/site/` and set the slot's `src` (and `alt`).
+Product photos are uploaded in the admin as before.

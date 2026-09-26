@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Phone, Mail, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -8,17 +7,19 @@ import { ContactForm } from "@/components/contact-form"
 import { Container, Section, Eyebrow, Hairline, Sprig } from "@/components/site/primitives"
 import { siteConfig } from "@/lib/site-config"
 import { cn } from "@/lib/utils"
+import { photos, gallery, type PhotoSlot } from "@/lib/photos"
+import { Photo } from "@/components/site/photo"
 import { getPublicCatalog, type Catalog, type CatalogCategory } from "@/lib/db"
 
-// Curated artwork for the original categories; others use their first product photo.
-const categoryArt: Record<string, { image: string; description: string }> = {
-  stoelen: { image: "/category-chairs.jpg", description: "Elegante stoelen voor elke gelegenheid" },
-  tafels: { image: "/category-tables.jpg", description: "Tafels in diverse maten en stijlen" },
-  decoratie: { image: "/category-decoration.jpg", description: "Decoratieve items voor de perfecte sfeer" },
+// Dedicated photos for the original categories (lib/photos.ts); others use their first product photo.
+const categoryArt: Record<string, { photo: PhotoSlot; description: string }> = {
+  stoelen: { photo: photos.categoryStoelen, description: "Elegante stoelen voor elke gelegenheid" },
+  tafels: { photo: photos.categoryTafels, description: "Tafels in diverse maten en stijlen" },
+  decoratie: { photo: photos.categoryDecoratie, description: "Decoratieve items voor de perfecte sfeer" },
 }
 const artOrder = Object.keys(categoryArt)
 
-type Tile = { id: string; name: string; description: string; image: string; count?: number }
+type Tile = { id: string; name: string; description: string; photo: PhotoSlot; count?: number }
 
 // Shown only when the site runs without a database (e.g. a local build).
 const fallbackTiles: Tile[] = [
@@ -41,7 +42,14 @@ function collectionTiles(catalog: Catalog | null): Tile[] {
       id: c.id,
       name: c.name,
       description: c.description || categoryArt[c.id]?.description || "",
-      image: categoryArt[c.id]?.image || c.coverImage || "/placeholder.svg",
+      photo: categoryArt[c.id]?.photo ?? {
+        id: `category-${c.id}`,
+        label: `Categorie ${c.name}`,
+        brief: `Sfeerfoto van ${c.name.toLowerCase()} in een echte opstelling.`,
+        format: "Liggend 16:10 · min. 1600 × 1000 px",
+        alt: `${c.name} huren bij Mailra`,
+        src: c.coverImage || undefined,
+      },
       count: c.productCount,
     }))
 }
@@ -88,19 +96,16 @@ export default async function HomePage() {
     <main className="min-h-screen bg-canvas">
       <Header />
 
-      {/* Hero — lit, not scrimmed. Type lives in the quiet upper-left third. */}
+      {/* Hero — type lives in the quiet left half; gradients keep it legible on any photo. */}
       <section className="relative overflow-hidden bg-olive-deep">
-        <div className="relative h-[92vh] min-h-[640px] w-full">
-          <Image
-            src="/hero-event.jpg"
-            alt="Gestylede bruiloftstafels met chiavari stoelen, bloemen en lichtjes van Mailra"
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-          {/* Legibility gradient confined to the corner that carries the type */}
-          <div className="absolute inset-0 bg-gradient-to-br from-olive-deep/75 via-olive-deep/15 to-transparent" />
+        <div className="relative h-[92svh] min-h-[640px] w-full">
+          <Photo slot={photos.hero} priority sizes="100vw" tone="dark" captionAt="hero" />
+          {photos.hero.src && (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-r from-olive-deep/80 via-olive-deep/35 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-olive-deep/70 via-transparent to-transparent sm:hidden" />
+            </>
+          )}
           <div className="arch absolute inset-x-0 bottom-0 h-10 bg-canvas sm:h-14" aria-hidden="true" />
 
           <div className="absolute inset-0 flex items-end sm:items-center">
@@ -113,7 +118,7 @@ export default async function HomePage() {
                   bruiloften, feesten en zakelijke evenementen — door heel Nederland.
                 </p>
                 <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <Button size="lg" className="group w-full rounded-[2px] px-8 sm:w-auto" asChild>
+                  <Button size="lg" variant="secondary" className="group w-full rounded-[2px] px-8 sm:w-auto" asChild>
                     <Link href="/producten">
                       Bekijk de collectie
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -174,21 +179,26 @@ export default async function HomePage() {
                         hero ? "aspect-[4/5] md:h-full" : tiles.length === 1 ? "aspect-[16/9]" : "aspect-[16/10]",
                       )}
                     >
-                      <Image
-                        src={category.image}
-                        alt={`${category.name} huren bij ${siteConfig.brandShort}`}
-                        fill
-                        className="object-cover"
+                      <Photo
+                        slot={category.photo}
+                        captionAt="top"
                         sizes={tiles.length === 1 ? "100vw" : "(min-width: 768px) 50vw, 100vw"}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
-                    </div>
-                    <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-                      <h3 className="text-h3 !text-2xl text-canvas">{category.name}</h3>
-                      {category.description && (
-                        <p className="mt-1 line-clamp-2 text-sm text-canvas/80">{category.description}</p>
+                      {category.photo.src && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
                       )}
-                      <div className="link-underline-active mt-4 inline-flex items-center gap-2 text-sm font-medium text-canvas">
+                    </div>
+                    <div
+                      className={cn(
+                        "absolute inset-x-0 bottom-0 p-6 sm:p-8",
+                        category.photo.src ? "text-canvas" : "text-ink",
+                      )}
+                    >
+                      <h3 className="text-h3 !text-2xl">{category.name}</h3>
+                      {category.description && (
+                        <p className="mt-1 line-clamp-2 text-sm opacity-80">{category.description}</p>
+                      )}
+                      <div className="link-underline-active mt-4 inline-flex items-center gap-2 text-sm font-medium">
                         {category.count
                           ? `${category.count} ${category.count === 1 ? "item" : "items"}`
                           : "Bekijk collectie"}
@@ -220,18 +230,17 @@ export default async function HomePage() {
             <h2 className="text-h2 mt-4 text-ink">In vier stappen naar uw evenement</h2>
           </div>
 
-          <div className="mt-14 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-14 grid grid-cols-1 gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
             {processSteps.map((item) => (
-              <div key={item.step} className="relative">
-                <span className="text-display-2 !text-6xl text-olive-ink/10" aria-hidden="true">
+              <li key={item.step} className="border-t border-gold-ink/30 pt-6">
+                <span className="text-display-2 !text-4xl text-gold-ink" aria-hidden="true">
                   {item.step}
                 </span>
-                <h3 className="text-h3 !text-lg -mt-6 text-ink">{item.title}</h3>
-                <Hairline className="my-4 w-10" />
-                <p className="text-sm leading-relaxed text-ink-70">{item.description}</p>
-              </div>
+                <h3 className="text-h3 !text-lg mt-4 text-ink">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink-70">{item.description}</p>
+              </li>
             ))}
-          </div>
+          </ol>
         </Container>
       </Section>
 
@@ -246,30 +255,39 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* Sfeerbeeld — editorial strip, scroll parallax */}
-      <Section reveal={false} className="bg-canvas overflow-hidden">
+      {/* Uit ons werk — real events, not stock */}
+      <Section className="bg-canvas !pt-0">
         <Container size="wide">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {["/about-us.jpg", "/images/misc/misc (5).jpg", "/images/misc/misc (8).jpg"].map(
-              (src, i) => (
-                <div
-                  key={src}
-                  className={`u-reveal-scale relative aspect-[3/4] overflow-hidden bg-linen ${
-                    i === 1 ? "sm:mt-10" : ""
-                  }`}
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
-                  <Image
-                    src={src}
-                    alt="Sfeerimpressie van een Mailra evenement"
-                    fill
-                    loading={i === 0 ? "eager" : "lazy"}
-                    className="u-parallax object-cover scale-110"
-                    sizes="(min-width: 640px) 33vw, 100vw"
-                  />
-                </div>
-              ),
-            )}
+          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+            <div className="max-w-xl">
+              <Eyebrow>Uit ons werk</Eyebrow>
+              <h2 className="text-h2 mt-4 text-ink">Feesten die wij mochten aankleden</h2>
+            </div>
+            <Link href="/contact" className="link-underline self-start text-sm font-medium text-gold-ink sm:self-auto">
+              Plan uw eigen feest
+            </Link>
+          </div>
+
+          <div className="mt-12 grid grid-cols-2 gap-4 md:h-[min(44rem,62vw)] md:grid-cols-4 md:grid-rows-2 lg:gap-6">
+            {gallery.map((photo, i) => (
+              <figure
+                key={photo.id}
+                className={cn(
+                  "u-hover-zoom group relative overflow-hidden bg-linen md:aspect-auto",
+                  i === 0 && "col-span-2 aspect-[4/5] md:row-span-2",
+                  i === 1 && "col-span-2 aspect-[16/10]",
+                  i > 1 && "aspect-[4/5]",
+                )}
+              >
+                <Photo
+                  slot={photo}
+                  sizes={i < 2 ? "(min-width: 768px) 50vw, 100vw" : "(min-width: 768px) 25vw, 50vw"}
+                />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/60 to-transparent px-4 pb-3 pt-10 text-xs font-medium tracking-wide text-canvas">
+                  {photo.label}
+                </figcaption>
+              </figure>
+            ))}
           </div>
         </Container>
       </Section>
@@ -324,7 +342,7 @@ export default async function HomePage() {
               </a>
             </div>
 
-            <div className="rounded-[2px] bg-surface p-8">
+            <div className="rounded-[2px] bg-surface p-6 text-ink sm:p-8">
               <h3 className="text-h3 !text-xl text-ink">Stuur ons een bericht</h3>
               <div className="mt-6">
                 <ContactForm />

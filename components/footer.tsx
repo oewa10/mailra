@@ -34,7 +34,7 @@ async function footerCategories() {
 export async function Footer() {
   const categories = await footerCategories()
   return (
-    <footer className="bg-olive-deep text-canvas">
+    <footer className="border-t border-canvas/10 bg-olive-deep text-canvas">
       <div className="u-wide section-y-sm">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.3fr_1fr_1fr_1.2fr]">
           <div>

@@ -3,6 +3,8 @@ import { Phone, Mail, Clock, MapPin } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Suspense } from "react"
+import { Photo } from "@/components/site/photo"
+import { photos } from "@/lib/photos"
 import { ContactPageForm, ContactPageFormFromUrl } from "@/components/contact-page-form"
 import { Container, Eyebrow, Hairline } from "@/components/site/primitives"
 import {
@@ -100,15 +102,20 @@ export default function ContactPage() {
         className="bg-linen"
         style={{ paddingTop: "calc(var(--header-h) + var(--space-section-sm))", paddingBottom: "var(--space-section-sm)" }}
       >
-        <Container size="wide">
-          <Eyebrow>Offerte aanvragen</Eyebrow>
-          <h1 className="text-display-2 mt-4 max-w-2xl text-ink">
-            Laten we uw evenement bespreken
-          </h1>
-          <p className="text-lead mt-6 max-w-xl">
-            Heeft u vragen of wilt u een vrijblijvende offerte ontvangen? Wij staan klaar
-            om u te helpen bij het plannen van uw perfecte evenement.
-          </p>
+        <Container size="wide" className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <Eyebrow>Offerte aanvragen</Eyebrow>
+            <h1 className="text-display-2 mt-4 max-w-2xl text-ink">
+              Laten we uw evenement bespreken
+            </h1>
+            <p className="text-lead mt-6 max-w-xl">
+              Heeft u vragen of wilt u een vrijblijvende offerte ontvangen? Wij staan klaar
+              om u te helpen bij het plannen van uw perfecte evenement.
+            </p>
+          </div>
+          <div className="relative hidden aspect-[5/4] overflow-hidden bg-canvas lg:block">
+            <Photo slot={photos.contact} priority sizes="(min-width: 1024px) 40vw, 1px" />
+          </div>
         </Container>
       </section>
 

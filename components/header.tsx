@@ -37,6 +37,16 @@ export function Header() {
     }
   }, [mobileMenuOpen])
 
+  // The homepage opens on a dark hero; until the header turns solid its type has to be light.
+  const [atTop, setAtTop] = useState(true)
+  useEffect(() => {
+    const update = () => setAtTop(window.scrollY < 120)
+    update()
+    window.addEventListener("scroll", update, { passive: true })
+    return () => window.removeEventListener("scroll", update)
+  }, [])
+  const onDark = pathname === "/" && atTop && !mobileMenuOpen
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setMobileMenuOpen(false)
@@ -48,7 +58,9 @@ export function Header() {
   return (
     <>
       <header
-        className="site-header fixed top-0 left-0 right-0 z-50 border-b border-hairline/60 bg-canvas/85 backdrop-blur-md"
+        className={`site-header fixed top-0 left-0 right-0 z-50 border-b border-hairline/60 bg-canvas/85 backdrop-blur-md transition-colors ${
+          onDark ? "site-header--on-dark" : ""
+        }`}
         style={{ height: "var(--header-h)" }}
       >
         <nav
@@ -82,7 +94,7 @@ export function Header() {
             >
               <div className="relative w-6 h-6">
                 <Menu
-                  className={`h-6 w-6 absolute inset-0 text-ink transition-all duration-300 ${mobileMenuOpen ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"}`}
+                  className={`h-6 w-6 absolute inset-0 transition-all duration-300 ${onDark ? "text-canvas" : "text-ink"} ${mobileMenuOpen ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"}`}
                   aria-hidden="true"
                 />
                 <X
@@ -102,7 +114,13 @@ export function Header() {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={`link-underline text-eyebrow !tracking-[0.14em] transition-colors ${
-                    active ? "text-ink link-underline-active" : "text-ink-70 hover:text-ink"
+                    onDark
+                      ? active
+                        ? "!text-canvas link-underline-active"
+                        : "!text-canvas/75 hover:!text-canvas"
+                      : active
+                        ? "!text-ink link-underline-active"
+                        : "!text-ink-70 hover:!text-ink"
                   }`}
                 >
                   {item.name}
@@ -112,7 +130,7 @@ export function Header() {
           </div>
 
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <Button className="rounded-[2px] px-6" asChild>
+            <Button className="rounded-[2px] px-6" variant={onDark ? "secondary" : "default"} asChild>
               <Link href="/contact">Offerte Aanvragen</Link>
             </Button>
           </div>

@@ -8,7 +8,7 @@ import type { CatalogCategory } from "@/lib/db"
 const linkClass = (active: boolean) =>
   cn(
     "link-underline shrink-0 text-eyebrow !tracking-[0.14em] transition-colors",
-    active ? "text-ink link-underline-active" : "text-ink-55 hover:text-ink",
+    active ? "!text-ink link-underline-active" : "!text-ink-55 hover:!text-ink",
   )
 
 export function CategoryFilter({

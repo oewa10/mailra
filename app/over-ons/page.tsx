@@ -1,4 +1,5 @@
-import Image from "next/image"
+import { Photo } from "@/components/site/photo"
+import { photos } from "@/lib/photos"
 import Link from "next/link"
 import { ArrowRight, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -45,8 +46,8 @@ export default function AboutPage() {
         style={{ paddingTop: "calc(var(--header-h) + var(--space-section-sm))" }}
       >
         <Container size="wide">
-          <div className="grid grid-cols-1 items-end gap-12 pb-16 lg:grid-cols-2 lg:pb-0">
-            <div>
+          <div className="grid grid-cols-1 items-center gap-12 pb-16 lg:grid-cols-2 lg:gap-20 lg:pb-0">
+            <div className="lg:pb-16">
               <Eyebrow>Ons verhaal</Eyebrow>
               <h1 className="text-display-2 mt-4 text-ink">Over {siteConfig.brandFull}</h1>
               <p className="text-lead mt-6">
@@ -64,13 +65,7 @@ export default function AboutPage() {
               </p>
             </div>
             <ArchFrame className="relative -mb-px aspect-[4/3] bg-linen lg:aspect-[4/5]">
-              <Image
-                src="/about-us.jpg"
-                alt={`Sfeervolle decoratie van ${siteConfig.brandFull}`}
-                fill
-                className="object-cover"
-                sizes="(min-width: 1024px) 50vw, 100vw"
-              />
+              <Photo slot={photos.about} priority sizes="(min-width: 1024px) 50vw, 100vw" />
             </ArchFrame>
           </div>
         </Container>
