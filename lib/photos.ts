@@ -69,6 +69,14 @@ export const photos = {
     alt: "Gasten proosten aan een feestelijk gedekte tafel",
     src: "/images/werk/gasten-proosten-feesttafel.jpg",
   }),
+  delivery: slot({
+    id: "over-ons-levering",
+    label: "Over ons — levering & opbouw",
+    brief: "Ons team dat de bus inlaadt en op locatie opbouwt, als bewijs van de volledige service.",
+    format: "Liggend 16:9 · min. 2000 × 1125 px",
+    alt: "Ons team laadt stoelen en tafels in de bus en bouwt ze op bij een landgoed voor een bruiloft",
+    src: "/images/werk/levering-opbouw-landgoed.jpg",
+  }),
 }
 
 /** Real work, shown in the "Uit ons werk" gallery on the homepage. */

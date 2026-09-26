@@ -152,6 +152,22 @@ export default function AboutPage() {
         </Container>
       </Section>
 
+      {/* Levering & opbouw — visual proof of the full service, right before the final CTA */}
+      <Section className="bg-canvas !pt-0">
+        <Container size="wide">
+          <div className="relative aspect-[16/9] overflow-hidden bg-linen">
+            <Photo slot={photos.delivery} sizes="100vw" captionAt="top" />
+            {photos.delivery.src && (
+              <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
+            )}
+          </div>
+          <p className="mt-6 max-w-lg text-sm text-ink-70">
+            Van inladen tot opbouwen op locatie — wij verzorgen de volledige levering, zodat u
+            zich alleen om uw gasten hoeft te bekommeren.
+          </p>
+        </Container>
+      </Section>
+
       {/* CTA */}
       <section className="bg-olive-deep py-24 text-center">
         <Container>
