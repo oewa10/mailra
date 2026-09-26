@@ -3,7 +3,6 @@ import { photos } from "@/lib/photos"
 import Link from "next/link"
 import { ArrowRight, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { NetherlandsMap } from "@/components/netherlands-map"
 import { Container, Section, Eyebrow, Hairline, ArchFrame } from "@/components/site/primitives"
 import { siteConfig } from "@/lib/site-config"
 import type { Metadata } from "next"
@@ -126,8 +125,8 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <div className="relative aspect-square overflow-hidden bg-canvas">
-              <NetherlandsMap />
+            <div className="relative aspect-square overflow-hidden bg-linen">
+              <Photo slot={photos.delivery} sizes="(min-width: 1024px) 50vw, 100vw" />
             </div>
           </div>
         </Container>
@@ -149,22 +148,6 @@ export default function AboutPage() {
             Bekijk het verhuurbeleid
             <ArrowRight className="h-4 w-4" />
           </Link>
-        </Container>
-      </Section>
-
-      {/* Levering & opbouw — visual proof of the full service, right before the final CTA */}
-      <Section className="bg-canvas !pt-0">
-        <Container size="wide">
-          <div className="relative aspect-[16/9] overflow-hidden bg-linen">
-            <Photo slot={photos.delivery} sizes="100vw" captionAt="top" />
-            {photos.delivery.src && (
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
-            )}
-          </div>
-          <p className="mt-6 max-w-lg text-sm text-ink-70">
-            Van inladen tot opbouwen op locatie — wij verzorgen de volledige levering, zodat u
-            zich alleen om uw gasten hoeft te bekommeren.
-          </p>
         </Container>
       </Section>
 

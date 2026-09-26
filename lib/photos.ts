@@ -70,10 +70,10 @@ export const photos = {
     src: "/images/werk/gasten-proosten-feesttafel.jpg",
   }),
   delivery: slot({
-    id: "over-ons-levering",
-    label: "Over ons — levering & opbouw",
+    id: "over-ons-werkgebied",
+    label: "Over ons — werkgebied",
     brief: "Ons team dat de bus inlaadt en op locatie opbouwt, als bewijs van de volledige service.",
-    format: "Liggend 16:9 · min. 2000 × 1125 px",
+    format: "Vierkant 1:1 · min. 1600 × 1600 px",
     alt: "Ons team laadt stoelen en tafels in de bus en bouwt ze op bij een landgoed voor een bruiloft",
     src: "/images/werk/levering-opbouw-landgoed.jpg",
   }),
