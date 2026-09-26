@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { buildWhatsAppLink } from "@/lib/site-config"
+import { formatDutchDate } from "@/lib/utils"
 
 /**
  * Short home-page enquiry form. There is no backend — submitting builds a
@@ -32,18 +33,14 @@ export function ContactForm() {
     const eventDate = String(data.get("eventDate") || "")
     const message = String(data.get("message") || "")
 
-    const lines = [
-      `Hallo Mailra! Ik heb een aanvraag via de website.`,
-      ``,
-      `Naam: ${name}`,
-      `E-mail: ${email}`,
-      phone && `Telefoon: ${phone}`,
-      eventDate && `Datum evenement: ${eventDate}`,
-      ``,
-      `Bericht: ${message}`,
-    ].filter(Boolean)
+    // Built as paragraphs (not a label: value dump), joined with blank lines so it reads like a
+    // message someone would actually send.
+    const intro = `Hoi Mailra! Mijn naam is ${name} en ik neem contact op via de website.`
+    const eventLine = eventDate && `Datum evenement: ${formatDutchDate(eventDate)}`
+    const contactLine = `Je kunt mij bereiken via ${email}${phone ? ` of ${phone}` : ""}.`
+    const paragraphs = [intro, message, eventLine, contactLine].filter((p): p is string => Boolean(p?.trim()))
 
-    const url = buildWhatsAppLink(lines.join("\n"))
+    const url = buildWhatsAppLink(paragraphs.join("\n\n"))
     setFallbackUrl(url)
     window.open(url, "_blank", "noopener,noreferrer")
     setIsSubmitted(true)
