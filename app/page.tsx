@@ -7,28 +7,44 @@ import { Footer } from "@/components/footer"
 import { ContactForm } from "@/components/contact-form"
 import { Container, Section, Eyebrow, Hairline, Sprig } from "@/components/site/primitives"
 import { siteConfig } from "@/lib/site-config"
-import { getCategoriesWithProductCounts } from "@/lib/db"
+import { cn } from "@/lib/utils"
+import { getPublicCatalog, type Catalog, type CatalogCategory } from "@/lib/db"
 
-const categoryContent = [
-  {
-    id: "stoelen",
-    name: "Stoelen",
-    description: "Elegante stoelen voor elke gelegenheid",
-    image: "/category-chairs.jpg",
-  },
-  {
-    id: "tafels",
-    name: "Tafels",
-    description: "Tafels in diverse maten en stijlen",
-    image: "/category-tables.jpg",
-  },
-  {
-    id: "decoratie",
-    name: "Decoratie",
-    description: "Decoratieve items voor de perfecte sfeer",
-    image: "/category-decoration.jpg",
-  },
+// Curated artwork for the original categories; others use their first product photo.
+const categoryArt: Record<string, { image: string; description: string }> = {
+  stoelen: { image: "/category-chairs.jpg", description: "Elegante stoelen voor elke gelegenheid" },
+  tafels: { image: "/category-tables.jpg", description: "Tafels in diverse maten en stijlen" },
+  decoratie: { image: "/category-decoration.jpg", description: "Decoratieve items voor de perfecte sfeer" },
+}
+const artOrder = Object.keys(categoryArt)
+
+type Tile = { id: string; name: string; description: string; image: string; count?: number }
+
+// Shown only when the site runs without a database (e.g. a local build).
+const fallbackTiles: Tile[] = [
+  { id: "stoelen", name: "Stoelen", ...categoryArt.stoelen },
+  { id: "tafels", name: "Tafels", ...categoryArt.tafels },
+  { id: "decoratie", name: "Decoratie", ...categoryArt.decoratie },
 ]
+
+function rank(c: CatalogCategory) {
+  const i = artOrder.indexOf(c.id)
+  return i === -1 ? artOrder.length : i
+}
+
+function collectionTiles(catalog: Catalog | null): Tile[] {
+  if (!catalog) return fallbackTiles
+  return [...catalog.categories]
+    .sort((a, b) => rank(a) - rank(b) || b.productCount - a.productCount)
+    .slice(0, 3)
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      description: c.description || categoryArt[c.id]?.description || "",
+      image: categoryArt[c.id]?.image || c.coverImage || "/placeholder.svg",
+      count: c.productCount,
+    }))
+}
 
 const marqueeWords = [
   "Bruiloften",
@@ -61,16 +77,12 @@ const processSteps = [
   },
 ]
 
-export const revalidate = 300 // refresh live category counts every 5 minutes
+// Admin edits refresh this page on demand; the interval is only a safety net.
+export const revalidate = 3600
 
 export default async function HomePage() {
-  let counts: Record<string, number> = {}
-  try {
-    const rows = (await getCategoriesWithProductCounts(true)) as any[]
-    counts = Object.fromEntries(rows.map((r) => [r.id, Number(r.product_count) || 0]))
-  } catch {
-    counts = {}
-  }
+  const tiles = collectionTiles(await getPublicCatalog())
+  const featured = tiles.length === 3
 
   return (
     <main className="min-h-screen bg-canvas">
@@ -141,40 +153,53 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 md:grid-rows-2">
-            {categoryContent.map((category, index) => (
-              <Link
-                key={category.id}
-                href={`/producten?category=${category.id}`}
-                className={`u-hover-zoom group relative overflow-hidden ${
-                  index === 0 ? "md:row-span-2" : ""
-                }`}
-              >
-                <div
-                  className={`relative bg-linen ${index === 0 ? "aspect-[4/5] md:h-full" : "aspect-[16/10]"}`}
-                >
-                  <Image
-                    src={category.image}
-                    alt={`${category.name} huren bij ${siteConfig.brandShort}`}
-                    fill
-                    className="object-cover"
-                    sizes="(min-width: 768px) 50vw, 100vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
-                </div>
-                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-                  <h3 className="text-h3 !text-2xl text-canvas">{category.name}</h3>
-                  <p className="mt-1 text-sm text-canvas/80">{category.description}</p>
-                  <div className="link-underline-active mt-4 inline-flex items-center gap-2 text-sm font-medium text-canvas">
-                    {typeof counts[category.id] === "number" && counts[category.id] > 0
-                      ? `${counts[category.id]} items`
-                      : "Bekijk collectie"}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {tiles.length > 0 && (
+            <div
+              className={cn(
+                "mt-14 grid grid-cols-1 gap-6",
+                featured ? "md:grid-cols-2 md:grid-rows-2" : tiles.length === 2 && "md:grid-cols-2",
+              )}
+            >
+              {tiles.map((category, index) => {
+                const hero = featured && index === 0
+                return (
+                  <Link
+                    key={category.id}
+                    href={`/producten/${category.id}`}
+                    className={cn("u-hover-zoom group relative overflow-hidden", hero && "md:row-span-2")}
+                  >
+                    <div
+                      className={cn(
+                        "relative bg-linen",
+                        hero ? "aspect-[4/5] md:h-full" : tiles.length === 1 ? "aspect-[16/9]" : "aspect-[16/10]",
+                      )}
+                    >
+                      <Image
+                        src={category.image}
+                        alt={`${category.name} huren bij ${siteConfig.brandShort}`}
+                        fill
+                        className="object-cover"
+                        sizes={tiles.length === 1 ? "100vw" : "(min-width: 768px) 50vw, 100vw"}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+                      <h3 className="text-h3 !text-2xl text-canvas">{category.name}</h3>
+                      {category.description && (
+                        <p className="mt-1 line-clamp-2 text-sm text-canvas/80">{category.description}</p>
+                      )}
+                      <div className="link-underline-active mt-4 inline-flex items-center gap-2 text-sm font-medium text-canvas">
+                        {category.count
+                          ? `${category.count} ${category.count === 1 ? "item" : "items"}`
+                          : "Bekijk collectie"}
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
 
           <div className="mt-14 flex justify-center">
             <Link href="/producten">

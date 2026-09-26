@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Loader2, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import { Eye, Loader2, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -114,7 +114,7 @@ function CategoryEditor({
                 <p className="mt-1.5 text-xs text-ink-55">
                   Webadres:{" "}
                   <span className="font-mono">
-                    /producten?category={isNew ? slugify(name || "naam") : category.id}
+                    /producten/{isNew ? slugify(name || "naam") : category.id}
                   </span>
                   {!isNew && " (blijft gelijk bij hernoemen)"}
                 </p>
@@ -308,6 +308,14 @@ export function CategoriesManager({
                     <Pencil className="h-4 w-4" />
                     Bewerken
                   </DropdownMenuItem>
+                  {category.active && category.active_product_count > 0 && (
+                    <DropdownMenuItem asChild>
+                      <Link href={`/producten/${encodeURIComponent(category.id)}`} target="_blank">
+                        <Eye className="h-4 w-4" />
+                        Bekijk op website
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     variant="destructive"

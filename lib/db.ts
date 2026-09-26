@@ -1,67 +1,41 @@
+import { cache } from 'react'
 import { sql } from '@vercel/postgres'
 import bcrypt from 'bcryptjs'
 import { createHash, randomBytes } from 'crypto'
 import { slugify } from './slug'
 import type { AdminCategory, AdminProduct, AdminStats } from './admin/types'
 
-export async function initializeDatabase() {
-  try {
-    await sql`
-      CREATE TABLE IF NOT EXISTS products (
-        id VARCHAR(255) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        category VARCHAR(50) NOT NULL,
-        description TEXT,
-        dimensions VARCHAR(255),
-        capacity VARCHAR(255),
-        image TEXT,
-        active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `
-    await sql`
-      CREATE TABLE IF NOT EXISTS categories (
-        id VARCHAR(255) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `
-    await sql`
-      CREATE TABLE IF NOT EXISTS admin_users (
-        id VARCHAR(255) PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        name VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `
-    await sql`
-      CREATE TABLE IF NOT EXISTS password_reset_tokens (
-        id VARCHAR(255) PRIMARY KEY,
-        user_id VARCHAR(255) NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
-        token VARCHAR(255) UNIQUE NOT NULL,
-        expires_at TIMESTAMP NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `
-    console.log('Database initialized successfully')
-  } catch (error) {
-    console.error('Database initialization error:', error)
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Row mapping
 // ---------------------------------------------------------------------------
 
+// Uploaded photos live in the image column as data URLs (hundreds of KB each). List queries never
+// select that column; they return a short URL instead and /media/products/... streams the bytes.
+export const MEDIA_PREFIX = '/media/products/'
+
+// Changes whenever the row changes, so a media URL can be cached forever.
+const VERSION_SQL = `floor(extract(epoch from p.updated_at) * 1000)::bigint`
+
+const PRODUCT_COLUMNS = `
+  p.id, p.name, p.category, p.description, p.dimensions, p.capacity, p.active,
+  p.created_at, p.updated_at,
+  substr(p.image, 1, 5) = 'data:' AS image_inline,
+  CASE WHEN substr(p.image, 1, 5) = 'data:' THEN NULL ELSE p.image END AS image_path,
+  ${VERSION_SQL} AS image_version
+`
+
 function iso(value: unknown): string {
   if (value instanceof Date) return value.toISOString()
   return value ? new Date(String(value)).toISOString() : new Date(0).toISOString()
+}
+
+export function mediaUrl(id: string, version: string | number) {
+  return `${MEDIA_PREFIX}${encodeURIComponent(id)}/${Number(version).toString(36)}`
+}
+
+function imageUrl(row: any): string {
+  if (row.image_inline) return mediaUrl(row.id, row.image_version)
+  return row.image_path ?? ''
 }
 
 function toProduct(row: any): AdminProduct {
@@ -72,7 +46,7 @@ function toProduct(row: any): AdminProduct {
     description: row.description ?? '',
     dimensions: row.dimensions ?? '',
     capacity: row.capacity ?? '',
-    image: row.image ?? '',
+    image: imageUrl(row),
     active: row.active !== false,
     created_at: iso(row.created_at),
     updated_at: iso(row.updated_at),
@@ -104,36 +78,110 @@ async function uniqueId(table: 'products' | 'categories', name: string): Promise
   }
 }
 
-// ---------------------------------------------------------------------------
-// Products — public reads swallow errors so the site still renders without a DB
-// ---------------------------------------------------------------------------
+function isUniqueViolation(error: unknown) {
+  return (error as { code?: string })?.code === '23505'
+}
 
-export async function getProducts(activeOnly: boolean = false): Promise<AdminProduct[]> {
-  try {
-    // Public visibility needs both the product and its category switched on.
-    const result = activeOnly
-      ? await sql`
-          SELECT p.* FROM products p
-          LEFT JOIN categories c ON c.id = p.category
-          WHERE p.active AND c.active IS NOT FALSE
-          ORDER BY p.created_at DESC
-        `
-      : await sql`SELECT * FROM products ORDER BY created_at DESC`
-    return result.rows.map(toProduct)
-  } catch (error) {
-    console.error('Error fetching products:', error)
-    return []
+/** Two saves with the same name can race for the same slug; the loser picks the next free one. */
+async function insertWithUniqueId<T>(
+  table: 'products' | 'categories',
+  name: string,
+  insert: (id: string) => Promise<T>,
+): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    const id = await uniqueId(table, name)
+    try {
+      return await insert(id)
+    } catch (error) {
+      if (!isUniqueViolation(error) || attempt >= 4) throw error
+    }
   }
 }
 
+// ---------------------------------------------------------------------------
+// Public catalog
+// ---------------------------------------------------------------------------
+
+export type CatalogProduct = Pick<
+  AdminProduct,
+  'id' | 'name' | 'category' | 'description' | 'dimensions' | 'capacity' | 'image'
+>
+
+export type CatalogCategory = {
+  id: string
+  name: string
+  description: string
+  productCount: number
+  /** First product photo in the category, for tiles without dedicated artwork. */
+  coverImage: string
+}
+
+export type Catalog = { categories: CatalogCategory[]; products: CatalogProduct[] }
+
+/**
+ * Everything the public site shows: products that are switched on and whose category is too, plus
+ * the categories that have at least one such product. Returns null when no database is configured
+ * (local builds); real query errors are thrown so a failed ISR refresh keeps serving the last good
+ * page instead of caching an empty catalog.
+ */
+export const getPublicCatalog = cache(async (): Promise<Catalog | null> => {
+  if (!process.env.POSTGRES_URL) return null
+
+  const [productRows, categoryRows] = await Promise.all([
+    sql.query(`
+      SELECT ${PRODUCT_COLUMNS}
+      FROM products p
+      LEFT JOIN categories c ON c.id = p.category
+      WHERE p.active AND c.active IS NOT FALSE
+      ORDER BY p.created_at DESC, p.name ASC
+    `),
+    sql`SELECT id, name, description FROM categories WHERE active ORDER BY name ASC`,
+  ])
+
+  const products: CatalogProduct[] = productRows.rows.map((row) => {
+    const { id, name, category, description, dimensions, capacity, image } = toProduct(row)
+    return { id, name, category, description, dimensions, capacity, image }
+  })
+
+  const categories: CatalogCategory[] = categoryRows.rows
+    .map((row) => {
+      const inCategory = products.filter((p) => p.category === row.id)
+      return {
+        id: row.id as string,
+        name: row.name as string,
+        description: (row.description as string) ?? '',
+        productCount: inCategory.length,
+        coverImage: inCategory.find((p) => p.image)?.image ?? '',
+      }
+    })
+    .filter((c) => c.productCount > 0)
+
+  return { categories, products }
+})
+
+// ---------------------------------------------------------------------------
+// Products (admin)
+// ---------------------------------------------------------------------------
+
 export async function getAdminProducts(): Promise<AdminProduct[]> {
-  const result = await sql`SELECT * FROM products ORDER BY created_at DESC`
+  const result = await sql.query(`SELECT ${PRODUCT_COLUMNS} FROM products p ORDER BY p.created_at DESC`)
   return result.rows.map(toProduct)
 }
 
 export async function getProductById(id: string): Promise<AdminProduct | null> {
-  const result = await sql`SELECT * FROM products WHERE id = ${id}`
+  const result = await sql.query(`SELECT ${PRODUCT_COLUMNS} FROM products p WHERE p.id = $1`, [id])
   return result.rows[0] ? toProduct(result.rows[0]) : null
+}
+
+/** Raw bytes for /media/products/[id]; null when the product has no uploaded photo. */
+export async function getProductImage(id: string) {
+  const result = await sql.query(
+    `SELECT p.image, ${VERSION_SQL} AS image_version FROM products p WHERE p.id = $1`,
+    [id],
+  )
+  const row = result.rows[0]
+  if (!row?.image) return null
+  return { image: row.image as string, version: Number(row.image_version).toString(36) }
 }
 
 type ProductInput = {
@@ -147,35 +195,52 @@ type ProductInput = {
 }
 
 export async function createProduct(input: ProductInput): Promise<AdminProduct> {
-  const id = await uniqueId('products', input.name)
-  const result = await sql`
-    INSERT INTO products (id, name, category, description, dimensions, capacity, image, active)
-    VALUES (${id}, ${input.name}, ${input.category}, ${input.description}, ${input.dimensions},
-            ${input.capacity}, ${input.image}, ${input.active ?? true})
-    RETURNING *
-  `
-  return toProduct(result.rows[0])
+  // A media URL only makes sense for the product it belongs to.
+  const image = input.image.startsWith(MEDIA_PREFIX) ? '' : input.image
+  return insertWithUniqueId('products', input.name, async (id) => {
+    const result = await sql.query(
+      `WITH p AS (
+         INSERT INTO products (id, name, category, description, dimensions, capacity, image, active)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING *
+       )
+       SELECT ${PRODUCT_COLUMNS} FROM p`,
+      [id, input.name, input.category, input.description, input.dimensions, input.capacity, image, input.active ?? true],
+    )
+    return toProduct(result.rows[0])
+  })
 }
 
 export async function updateProduct(id: string, input: ProductInput): Promise<AdminProduct | null> {
-  const result = await sql`
-    UPDATE products
-    SET name = ${input.name}, category = ${input.category}, description = ${input.description},
-        dimensions = ${input.dimensions}, capacity = ${input.capacity}, image = ${input.image},
-        active = COALESCE(${input.active ?? null}::boolean, active),
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = ${id}
-    RETURNING *
-  `
+  // The editor echoes the current media URL back when the photo wasn't touched: keep the stored bytes.
+  const keepImage = input.image.startsWith(MEDIA_PREFIX)
+  const result = await sql.query(
+    `WITH p AS (
+       UPDATE products
+       SET name = $2, category = $3, description = $4, dimensions = $5, capacity = $6,
+           image = CASE WHEN $7::boolean THEN image ELSE $8 END,
+           active = COALESCE($9::boolean, active),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING *
+     )
+     SELECT ${PRODUCT_COLUMNS} FROM p`,
+    [
+      id, input.name, input.category, input.description, input.dimensions, input.capacity,
+      keepImage, keepImage ? null : input.image, input.active ?? null,
+    ],
+  )
   return result.rows[0] ? toProduct(result.rows[0]) : null
 }
 
 export async function setProductActive(id: string, active: boolean): Promise<AdminProduct | null> {
-  const result = await sql`
-    UPDATE products SET active = ${active}, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ${id}
-    RETURNING *
-  `
+  const result = await sql.query(
+    `WITH p AS (
+       UPDATE products SET active = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *
+     )
+     SELECT ${PRODUCT_COLUMNS} FROM p`,
+    [id, active],
+  )
   return result.rows[0] ? toProduct(result.rows[0]) : null
 }
 
@@ -186,7 +251,7 @@ export async function deleteProduct(id: string): Promise<boolean> {
 
 export async function setProductsActive(ids: string[], active: boolean): Promise<number> {
   const result = await sql.query(
-    'UPDATE products SET active = $1, updated_at = CURRENT_TIMESTAMP WHERE id = ANY($2::text[])',
+    'UPDATE products SET active = $1, updated_at = CURRENT_TIMESTAMP WHERE id = ANY($2::text[]) AND active <> $1',
     [active, ids],
   )
   return result.rowCount ?? 0
@@ -198,47 +263,12 @@ export async function deleteProducts(ids: string[]): Promise<number> {
 }
 
 // ---------------------------------------------------------------------------
-// Categories
+// Categories (admin)
 // ---------------------------------------------------------------------------
-
-export async function getCategories() {
-  try {
-    const result = await sql`SELECT * FROM categories ORDER BY created_at DESC`
-    return result.rows
-  } catch (error) {
-    console.error('Error fetching categories:', error)
-    return []
-  }
-}
-
-export async function getCategoriesWithProductCounts(activeOnly: boolean = true) {
-  try {
-    const result = activeOnly
-      ? await sql`
-          SELECT c.*, COUNT(p.id) AS product_count
-          FROM categories c
-          LEFT JOIN products p ON p.category = c.id AND p.active
-          WHERE c.active
-          GROUP BY c.id
-          ORDER BY c.created_at DESC
-        `
-      : await sql`
-          SELECT c.*, COUNT(p.id) AS product_count
-          FROM categories c
-          LEFT JOIN products p ON p.category = c.id
-          GROUP BY c.id
-          ORDER BY c.created_at DESC
-        `
-    return result.rows
-  } catch (error) {
-    console.error('Error fetching categories with product counts:', error)
-    return []
-  }
-}
 
 export async function getAdminCategories(): Promise<AdminCategory[]> {
   const result = await sql`
-    SELECT c.*,
+    SELECT c.id, c.name, c.description, c.active,
            COUNT(p.id) AS product_count,
            COUNT(p.id) FILTER (WHERE p.active) AS active_product_count
     FROM categories c
@@ -251,7 +281,7 @@ export async function getAdminCategories(): Promise<AdminCategory[]> {
 
 async function getAdminCategory(id: string): Promise<AdminCategory | null> {
   const result = await sql`
-    SELECT c.*,
+    SELECT c.id, c.name, c.description, c.active,
            COUNT(p.id) AS product_count,
            COUNT(p.id) FILTER (WHERE p.active) AS active_product_count
     FROM categories c
@@ -268,11 +298,13 @@ export async function categoryExists(id: string): Promise<boolean> {
 }
 
 export async function createCategory(input: { name: string; description: string }) {
-  const id = await uniqueId('categories', input.name)
-  await sql`
-    INSERT INTO categories (id, name, description, active)
-    VALUES (${id}, ${input.name}, ${input.description}, true)
-  `
+  const id = await insertWithUniqueId('categories', input.name, async (id) => {
+    await sql`
+      INSERT INTO categories (id, name, description, active)
+      VALUES (${id}, ${input.name}, ${input.description}, true)
+    `
+    return id
+  })
   return getAdminCategory(id)
 }
 
@@ -300,7 +332,11 @@ export async function countProductsInCategory(id: string): Promise<number> {
 }
 
 export async function deleteCategory(id: string): Promise<boolean> {
-  const result = await sql`DELETE FROM categories WHERE id = ${id}`
+  // Guarded in SQL too, so a product added in the meantime can't be orphaned.
+  const result = await sql`
+    DELETE FROM categories
+    WHERE id = ${id} AND NOT EXISTS (SELECT 1 FROM products WHERE category = ${id})
+  `
   return (result.rowCount ?? 0) > 0
 }
 
@@ -332,7 +368,10 @@ export async function getAdminStats(): Promise<AdminStats> {
 }
 
 export async function getRecentlyUpdatedProducts(limit = 5): Promise<AdminProduct[]> {
-  const result = await sql`SELECT * FROM products ORDER BY updated_at DESC LIMIT ${limit}`
+  const result = await sql.query(
+    `SELECT ${PRODUCT_COLUMNS} FROM products p ORDER BY p.updated_at DESC LIMIT $1`,
+    [limit],
+  )
   return result.rows.map(toProduct)
 }
 
