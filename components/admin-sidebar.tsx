@@ -138,7 +138,10 @@ export function AdminSidebar({ isMobileOpen, onMobileClose }: AdminSidebarProps)
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-300" 
               onClick={onMobileClose}
             />
-            <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border pt-20 animate-in slide-in-from-left duration-300">
+            <aside
+              className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border animate-in slide-in-from-left duration-300"
+              style={{ paddingTop: "var(--header-h)" }}
+            >
               {sidebarContent}
             </aside>
           </>
@@ -149,7 +152,10 @@ export function AdminSidebar({ isMobileOpen, onMobileClose }: AdminSidebarProps)
 
   // For desktop: render a regular sidebar
   return (
-    <aside className="hidden lg:block w-64 bg-card border-r border-border min-h-screen pt-20">
+    <aside
+      className="hidden lg:block w-64 bg-card border-r border-border min-h-screen"
+      style={{ paddingTop: "var(--header-h)" }}
+    >
       {sidebarContent}
     </aside>
   )

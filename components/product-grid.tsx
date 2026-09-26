@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { getProducts } from "@/lib/db"
 
 interface ProductGridProps {
@@ -9,7 +8,7 @@ interface ProductGridProps {
 
 export async function ProductGrid({ selectedCategory }: ProductGridProps) {
   const products = await getProducts(true) // Only fetch active products
-  
+
   const filteredProducts =
     selectedCategory === "all"
       ? products
@@ -17,55 +16,42 @@ export async function ProductGrid({ selectedCategory }: ProductGridProps) {
 
   if (filteredProducts.length === 0) {
     return (
-      <div className="py-16 text-center">
-        <p className="text-lg text-muted-foreground">
-          Geen producten gevonden in deze categorie.
-        </p>
+      <div className="py-24 text-center">
+        <p className="text-h3 !text-xl text-ink">Geen producten gevonden</p>
+        <p className="mt-2 text-ink-70">Probeer een andere categorie of neem contact met ons op.</p>
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-x-[var(--gap-grid)] gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {filteredProducts.map((product) => (
-        <div
+        <Link
           key={product.id}
-          className="group"
+          href={`/contact?product=${encodeURIComponent(product.name)}`}
+          className="u-hover-zoom group block"
         >
-          <div className="relative aspect-square overflow-hidden rounded-xl bg-secondary">
+          <div className="relative aspect-[4/5] overflow-hidden bg-linen">
             <Image
               src={product.image || "/placeholder.svg"}
-              alt={product.name}
+              alt={`${product.name} huren bij Mailra`}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover"
+              sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
             />
           </div>
           <div className="mt-4">
-            <h3 className="font-medium text-foreground">{product.name}</h3>
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-              {product.description}
-            </p>
-            {product.dimensions && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Afmetingen: {product.dimensions}
+            <h3 className="text-h3 !text-base !font-normal text-ink">{product.name}</h3>
+            {(product.dimensions || product.capacity) && (
+              <p className="mt-1 text-xs text-ink-55">
+                {[product.dimensions, product.capacity].filter(Boolean).join(" · ")}
               </p>
             )}
-            {product.capacity && (
-              <p className="text-xs text-muted-foreground">
-                Capaciteit: {product.capacity}
-              </p>
-            )}
-            <Link href={`/contact?product=${encodeURIComponent(product.name)}`}>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-4 w-full rounded-full bg-transparent"
-              >
-                Vraag beschikbaarheid
-              </Button>
-            </Link>
+            <span className="link-underline mt-2 inline-block text-xs font-medium text-gold-ink">
+              Vraag beschikbaarheid
+            </span>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   )
