@@ -237,7 +237,7 @@ export function ProductsManager({
           Bewerken
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={`/producten?category=${encodeURIComponent(product.category)}`} target="_blank">
+          <Link href={`/producten/${encodeURIComponent(product.category)}`} target="_blank">
             <Eye className="h-4 w-4" />
             Bekijk op website
           </Link>

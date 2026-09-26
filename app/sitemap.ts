@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next"
 import { siteConfig } from "@/lib/site-config"
-import { getCategoriesWithProductCounts } from "@/lib/db"
+import { getPublicCatalog } from "@/lib/db"
+
+export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -12,14 +14,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   try {
-    const categories = (await getCategoriesWithProductCounts(true)) as any[]
-    const categoryRoutes: MetadataRoute.Sitemap = categories
-      .filter((c) => Number(c.product_count) > 0)
-      .map((c) => ({
-        url: `${siteConfig.url}/producten?category=${c.id}`,
-        changeFrequency: "weekly" as const,
-        priority: 0.6,
-      }))
+    const catalog = await getPublicCatalog()
+    const categoryRoutes: MetadataRoute.Sitemap = (catalog?.categories ?? []).map((c) => ({
+      url: `${siteConfig.url}/producten/${c.id}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }))
     return [...staticRoutes, ...categoryRoutes]
   } catch {
     return staticRoutes

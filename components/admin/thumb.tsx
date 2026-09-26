@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { ImageOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+/** Small product photo for admin lists; goes through the image optimizer so lists stay light. */
 export function Thumb({ src, alt, className }: { src?: string; alt: string; className?: string }) {
   const [failed, setFailed] = useState(false)
 
@@ -20,11 +22,11 @@ export function Thumb({ src, alt, className }: { src?: string; alt: string; clas
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={src}
       alt={alt}
-      loading="lazy"
+      width={56}
+      height={56}
       onError={() => setFailed(true)}
       className={cn("shrink-0 bg-linen object-cover", className)}
     />

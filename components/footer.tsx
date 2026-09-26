@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Phone, Mail, MapPin } from "lucide-react"
 import { siteConfig } from "@/lib/site-config"
 import { Hairline } from "@/components/site/primitives"
+import { getPublicCatalog } from "@/lib/db"
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -10,15 +11,30 @@ const navigation = [
   { name: "Contact", href: "/contact" },
 ]
 
-const categories = [
-  { name: "Stoelen", href: "/producten?category=stoelen" },
-  { name: "Tafels", href: "/producten?category=tafels" },
-  { name: "Decoratie", href: "/producten?category=decoratie" },
+const fallbackCategories = [
+  { name: "Stoelen", href: "/producten/stoelen" },
+  { name: "Tafels", href: "/producten/tafels" },
+  { name: "Decoratie", href: "/producten/decoratie" },
 ]
 
-export function Footer() {
+async function footerCategories() {
+  try {
+    const catalog = await getPublicCatalog()
+    if (!catalog) return fallbackCategories
+    return [...catalog.categories]
+      .sort((a, b) => b.productCount - a.productCount)
+      .slice(0, 5)
+      .map((c) => ({ name: c.name, href: `/producten/${c.id}` }))
+  } catch {
+    // The footer is on every page; a database hiccup must never take a page down with it.
+    return [{ name: "Alle producten", href: "/producten" }]
+  }
+}
+
+export async function Footer() {
+  const categories = await footerCategories()
   return (
-    <footer className="bg-olive-deep text-canvas">
+    <footer className="border-t border-canvas/10 bg-olive-deep text-canvas">
       <div className="u-wide section-y-sm">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.3fr_1fr_1fr_1.2fr]">
           <div>
@@ -51,7 +67,7 @@ export function Footer() {
             <h3 className="text-eyebrow !text-canvas/50">Producten</h3>
             <ul className="mt-5 space-y-3">
               {categories.map((cat) => (
-                <li key={cat.name}>
+                <li key={cat.href}>
                   <Link
                     href={cat.href}
                     className="link-underline text-sm text-canvas/80 hover:text-canvas"

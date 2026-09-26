@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -135,7 +136,7 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
         <div className="space-y-2">
           <Label htmlFor="eventType">Type evenement</Label>
           <Select name="eventType" value={eventType} onValueChange={setEventType}>
-            <SelectTrigger className="rounded-[2px]">
+            <SelectTrigger className="w-full rounded-[2px]">
               <SelectValue placeholder="Selecteer type" />
             </SelectTrigger>
             <SelectContent>
@@ -156,7 +157,7 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
       <div className="space-y-2">
         <Label htmlFor="guestCount">Aantal gasten (geschat)</Label>
         <Select name="guestCount" value={guestCount} onValueChange={setGuestCount}>
-          <SelectTrigger className="rounded-[2px]">
+          <SelectTrigger className="w-full rounded-[2px]">
             <SelectValue placeholder="Selecteer aantal" />
           </SelectTrigger>
           <SelectContent>
@@ -196,4 +197,9 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
       </p>
     </form>
   )
+}
+
+export function ContactPageFormFromUrl() {
+  const product = useSearchParams().get("product")?.trim().slice(0, 120)
+  return <ContactPageForm preselectedProduct={product || undefined} />
 }

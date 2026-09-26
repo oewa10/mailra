@@ -75,7 +75,7 @@
   --fs-eyebrow: 0.75rem;
 
   /* ---- Fluid space scale ---- */
-  --space-section: clamp(4.5rem, 2.086rem + 9.9vw, 11rem);
+  --space-section: clamp(4rem, 2.4rem + 6.6vw, 8rem);
   --space-section-lg: calc(var(--space-section) * 1.5);
   --space-section-sm: calc(var(--space-section) * 0.6);
   --gutter: clamp(1.5rem, 0.9429rem + 2.29vw, 3rem);
@@ -205,7 +205,6 @@
 .font-display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
-  font-variation-settings: 'SOFT' 0, 'WONK' 0;
 }
 
 .text-display-1 {
@@ -407,6 +406,21 @@ p {
   }
 }
 
+/* Placeholder for a photo that still has to be taken; see lib/photos.ts. */
+.photo-placeholder--light {
+  background-color: var(--linen);
+  background-image:
+    radial-gradient(circle at 20% 15%, oklch(1 0 0 / 0.55), transparent 55%),
+    repeating-linear-gradient(135deg, oklch(0.47 0.075 68 / 0.05) 0 1px, transparent 1px 14px);
+}
+.photo-placeholder--dark {
+  background-color: var(--olive-deep);
+  background-image:
+    radial-gradient(circle at 80% 20%, oklch(0.76 0.09 82 / 0.22), transparent 55%),
+    radial-gradient(circle at 10% 90%, oklch(0.62 0.035 140 / 0.25), transparent 50%),
+    repeating-linear-gradient(135deg, oklch(1 0 0 / 0.025) 0 1px, transparent 1px 16px);
+}
+
 .u-hover-zoom img {
   transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -452,4 +466,13 @@ p {
       }
     }
   }
+}
+
+/* Over the dark homepage hero the header stays clear; a scrim keeps the logo readable. */
+.site-header.site-header--on-dark {
+  animation: none;
+  background: linear-gradient(to bottom, oklch(0.2 0.02 135 / 0.45), transparent);
+  border-bottom-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }

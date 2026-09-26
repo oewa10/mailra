@@ -1,6 +1,8 @@
 import "server-only"
+import { cache } from "react"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { getAdminPasswordVersion } from "@/lib/db"
 import {
   SESSION_COOKIE,
   SESSION_MAX_AGE,
@@ -9,21 +11,34 @@ import {
   type Session,
 } from "./session"
 
-export async function getSession(): Promise<Session | null> {
+/**
+ * The proxy only checks the signature (cheap, no database). This also checks the session was
+ * issued under the account's current password, so changing or resetting it signs out every other
+ * device, and a deleted account loses access at once. Memoized per request.
+ */
+export const getSession = cache(async (): Promise<Session | null> => {
   const cookieStore = await cookies()
-  return verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value)
-}
+  const session = await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value)
+  if (!session) return null
+  try {
+    return (await getAdminPasswordVersion(session.uid)) === session.pv ? session : null
+  } catch (error) {
+    console.error("Session check failed:", error)
+    return null
+  }
+})
 
-/** Returns a 401 response when there is no valid session, otherwise null. */
+/** Returns a 401 response (clearing a revoked cookie) when there is no valid session, otherwise null. */
 export async function denyUnlessAdmin(): Promise<NextResponse | null> {
-  const session = await getSession()
-  if (session) return null
-  return NextResponse.json({ error: "U bent niet (meer) ingelogd." }, { status: 401 })
+  if (await getSession()) return null
+  const response = NextResponse.json({ error: "U bent niet (meer) ingelogd." }, { status: 401 })
+  response.cookies.delete(SESSION_COOKIE)
+  return response
 }
 
-export async function startSession(uid: string, email: string) {
+export async function startSession(uid: string, email: string, pv: string) {
   const cookieStore = await cookies()
-  cookieStore.set(SESSION_COOKIE, await createSessionToken(uid, email), {
+  cookieStore.set(SESSION_COOKIE, await createSessionToken(uid, email, pv), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

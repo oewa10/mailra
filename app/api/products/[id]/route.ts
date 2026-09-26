@@ -18,8 +18,13 @@ export async function GET(_request: Request, { params }: Context) {
   const denied = await denyUnlessAdmin()
   if (denied) return denied
 
-  const product = await getProductById((await params).id)
-  return product ? NextResponse.json(product) : notFound()
+  try {
+    const product = await getProductById((await params).id)
+    return product ? NextResponse.json(product) : notFound()
+  } catch (err) {
+    console.error("Product fetch error:", err)
+    return NextResponse.json({ error: "Product ophalen is mislukt." }, { status: 500 })
+  }
 }
 
 export async function PUT(request: Request, { params }: Context) {

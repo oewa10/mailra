@@ -13,7 +13,8 @@ const sans = Instrument_Sans({
 
 const display = Fraunces({
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
+  // Only the optical-size axis is used; SOFT and WONK stay at their defaults, so they aren't downloaded.
+  axes: ["opsz"],
   variable: "--font-display-loaded",
   display: "swap",
 })

@@ -16,7 +16,7 @@ export default async function AdminAccountPage() {
           <h2 className="font-display text-xl text-ink">Ingelogd als</h2>
           <p className="mt-2 break-all text-sm text-ink-70">{session?.email}</p>
           <p className="mt-4 text-xs leading-relaxed text-ink-55">
-            Uw sessie blijft 7 dagen geldig op dit apparaat. Log uit via het menu als u een gedeelde computer gebruikt.
+            Uw sessie blijft 7 dagen geldig op dit apparaat. Log uit via het menu als u een gedeelde computer gebruikt. Na het wijzigen van uw wachtwoord worden alle andere apparaten automatisch uitgelogd.
           </p>
         </div>
 
