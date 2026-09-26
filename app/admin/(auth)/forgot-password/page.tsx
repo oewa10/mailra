@@ -1,103 +1,83 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Loader2, MailCheck } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { AuthCard, FormError } from "@/components/admin/auth-card"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    setMessage("")
     setLoading(true)
-
     try {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || "Er is een fout opgetreden")
-        return
-      }
-
-      setSubmitted(true)
-      setMessage(data.message)
-    } catch (err) {
-      setError("Er is een fout opgetreden. Probeer het later opnieuw.")
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) setError(data.error || "Er ging iets mis.")
+      else setMessage(data.message)
+    } catch {
+      setError("Geen verbinding. Probeer het later opnieuw.")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-lg border border-border p-8">
-          <h1 className="font-serif text-3xl text-foreground mb-2">Wachtwoord Vergeten</h1>
-          <p className="text-muted-foreground mb-8">Voer uw e-mailadres in om uw wachtwoord opnieuw in te stellen</p>
-
-          {submitted ? (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-green-500/10 text-green-600 text-sm">
-                {message}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Controleer uw e-mail voor verdere instructies.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  E-mailadres
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@mailra.nl"
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                />
-              </div>
-
-              {error && (
-                <div className="p-4 rounded-lg bg-destructive/10 text-destructive text-sm">
-                  {error}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-full"
-              >
-                {loading ? "Bezig..." : "Verstuur Reset Link"}
-              </Button>
-            </form>
-          )}
-
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <Link
-              href="/admin/login"
-              className="text-sm text-primary hover:underline"
-            >
-              Terug naar inloggen
-            </Link>
+    <AuthCard
+      title="Wachtwoord vergeten"
+      description={message ? undefined : "Vul het e-mailadres van uw beheeraccount in. We maken een herstellink voor u aan."}
+      footer={
+        <Link href="/admin/login" className="link-underline">
+          ← Terug naar inloggen
+        </Link>
+      }
+    >
+      {message ? (
+        <div className="space-y-4">
+          <div className="flex gap-3 border border-hairline bg-linen/60 p-4">
+            <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-olive-ink" aria-hidden="true" />
+            <p className="text-sm text-ink">{message}</p>
           </div>
+          <p className="text-xs leading-relaxed text-ink-55">
+            Geen link ontvangen? De herstellink wordt vastgelegd in de serverlogboeken van de website. Vraag
+            degene die de website technisch beheert om de link aan u door te sturen.
+          </p>
         </div>
-      </div>
-    </main>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <Label htmlFor="email" className="mb-2 block text-sm text-ink">
+              E-mailadres
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+          </div>
+          {error && <FormError>{error}</FormError>}
+          <Button type="submit" disabled={loading} className="h-10 w-full">
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            Herstellink aanvragen
+          </Button>
+        </form>
+      )}
+    </AuthCard>
   )
 }

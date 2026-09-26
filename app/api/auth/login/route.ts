@@ -1,48 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyAdminPassword } from '@/lib/db'
-import { cookies } from 'next/headers'
+import { NextResponse } from "next/server"
+import { z } from "zod"
+import { verifyAdminPassword } from "@/lib/db"
+import { startSession } from "@/lib/auth/server"
+import { parseJson } from "@/lib/admin/validation"
 
-export async function POST(request: NextRequest) {
+const loginSchema = z.object({
+  email: z.string().trim().min(1, "Vul uw e-mailadres in"),
+  password: z.string().min(1, "Vul uw wachtwoord in"),
+})
+
+export async function POST(request: Request) {
+  const { data, error } = await parseJson(request, loginSchema)
+  if (error) return error
+
   try {
-    const { email, password } = await request.json()
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      )
-    }
-
-    const user = await verifyAdminPassword(email, password)
-
+    const user = await verifyAdminPassword(data.email, data.password)
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "E-mailadres of wachtwoord klopt niet." }, { status: 401 })
     }
-
-    // Create session cookie
-    const cookieStore = await cookies()
-    cookieStore.set('admin_session', user.id, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    })
-
-    const response = NextResponse.json({
-      success: true,
-      message: 'Login successful',
-    })
-
-    return response
-  } catch (error) {
-    console.error('Login error:', error)
-    return NextResponse.json(
-      { error: 'An error occurred during login' },
-      { status: 500 }
-    )
+    await startSession(user.id, user.email)
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error("Login error:", err)
+    return NextResponse.json({ error: "Inloggen is nu niet mogelijk. Probeer het later opnieuw." }, { status: 500 })
   }
 }

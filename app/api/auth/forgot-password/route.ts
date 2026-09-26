@@ -1,48 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getAdminByEmail, createPasswordResetToken } from '@/lib/db'
+import { NextResponse } from "next/server"
+import { z } from "zod"
+import { createPasswordResetToken, getAdminByEmail } from "@/lib/db"
+import { parseJson } from "@/lib/admin/validation"
 
-export async function POST(request: NextRequest) {
+const schema = z.object({ email: z.string().trim().email("Vul een geldig e-mailadres in") })
+
+const GENERIC_MESSAGE =
+  "Als er een account bij dit e-mailadres hoort, is er een herstellink aangemaakt. Deze is één uur geldig."
+
+export async function POST(request: Request) {
+  const { data, error } = await parseJson(request, schema)
+  if (error) return error
+
   try {
-    const { email } = await request.json()
-
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      )
+    const user = await getAdminByEmail(data.email)
+    if (user) {
+      const token = await createPasswordResetToken(user.id)
+      const base = process.env.NEXT_PUBLIC_BASE_URL || new URL(request.url).origin
+      // No mail provider is configured yet; the link is only visible in the server logs.
+      console.log(`[admin] Password reset link for ${user.email}: ${base}/admin/reset-password?token=${token}`)
     }
-
-    const user = await getAdminByEmail(email)
-
-    if (!user) {
-      // Don't reveal if email exists for security
-      return NextResponse.json({
-        message: 'If an account exists with this email, you will receive a password reset link.',
-      })
-    }
-
-    const resetToken = await createPasswordResetToken(user.id)
-
-    if (!resetToken) {
-      return NextResponse.json(
-        { error: 'Failed to create reset token' },
-        { status: 500 }
-      )
-    }
-
-    // In production, send email with reset link
-    // For now, log the token (in production use a service like SendGrid)
-    const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/admin/reset-password?token=${resetToken}`
-    console.log('Password reset link:', resetLink)
-
-    return NextResponse.json({
-      message: 'If an account exists with this email, you will receive a password reset link.',
-    })
-  } catch (error) {
-    console.error('Forgot password error:', error)
-    return NextResponse.json(
-      { error: 'An error occurred' },
-      { status: 500 }
-    )
+    return NextResponse.json({ message: GENERIC_MESSAGE })
+  } catch (err) {
+    console.error("Forgot password error:", err)
+    return NextResponse.json({ error: "Er ging iets mis. Probeer het later opnieuw." }, { status: 500 })
   }
 }

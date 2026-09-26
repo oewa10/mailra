@@ -159,7 +159,7 @@ Admin gets its **own shell** — the public `Header`/`Footer` are removed from `
 | Active toggle | `Switch` inline in the row — optimistic, rolls back on error |
 | Filters | `Input` with search icon, category `Select`, status segmented `ToggleGroup` |
 | Loading | `Skeleton` rows matching final layout |
-| Status | `Badge` — Actief = olive-ink on linen, Inactief = ink-55 outline |
+| Status | Inline `Switch`; small outlined "Verborgen" label where a list needs it |
 
 ### 5.3 Screens
 
@@ -181,13 +181,13 @@ Admin gets its **own shell** — the public `Header`/`Footer` are removed from `
 - Bulk bar slides up from the bottom when ≥ 1 selected: "3 geselecteerd ·
   Zichtbaar maken · Verbergen · Verwijderen · ✕".
 - Editor (Sheet): image drop zone with preview, replace / remove; client-side resize
-  to max 1600 px WebP (q 0.82) before upload — typical 150–300 KB (fixes F7);
+  to max 1400 px WebP (q 0.8) before upload — typical 150–300 KB for real photos (fixes F7);
   name, category, description (with character count), afmetingen, capaciteit,
   "Zichtbaar op de website" switch. Dirty-state guard on close.
 
 **Categorieën**
 - List rows: name, description, product count ("12 producten"), Switch, menu.
-- Deactivate confirm states the exact number of products that will be hidden.
+- Hiding a category asks for confirmation and states how many products disappear from the site.
 - Delete disabled (with tooltip) when the category still has products.
 - Editor dialog: name, description; the URL slug is shown read-only as a preview.
 
@@ -233,7 +233,23 @@ Admin gets its **own shell** — the public `Header`/`Footer` are removed from `
 
 ---
 
-## 7. Follow-ups (out of scope, need a decision/credentials)
+## 7. Implementation notes (what changed vs. this plan)
+
+- **Category visibility is non-destructive.** The old toggle overwrote every product's own
+  `active` flag, so re-showing a category also re-showed products that had been hidden on
+  purpose. Now the public queries require *both* the product and its category to be on;
+  the per-product setting is preserved. Products hidden only through their category are
+  labelled "via categorie verborgen" in the list and counted on the dashboard.
+  Existing data: products switched off by the old cascade stay off — turn them back on
+  in bulk from Producten → filter "Verborgen" → select → "Zichtbaar maken".
+- Status badges were dropped in favour of the inline switch, which is both the state and
+  the control.
+- Toasts sit top-centre so they never cover the editor's save button or the bulk bar.
+- Session secret: set `ADMIN_SESSION_SECRET` (any long random string) in Vercel. Without
+  it the session is signed with `POSTGRES_URL`. Changing either signs everyone out.
+- `middleware.ts` became `proxy.ts` (Next 16 naming).
+
+## 8. Follow-ups (out of scope, need a decision/credentials)
 
 - **E-mail delivery** for password reset (Resend / Postmark API key).
 - **Blob storage** (Vercel Blob) for product images instead of data URLs in Postgres.

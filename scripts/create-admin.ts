@@ -5,10 +5,9 @@ async function createAdminUser() {
   try {
     console.log('Creating admin user...')
 
-    // Default admin credentials
-    const email = 'admin@mailra.nl'
-    const password = 'Mailra2024!' // Change this to a secure password
-    const name = 'Admin'
+    const email = process.env.ADMIN_EMAIL || 'admin@mailra.nl'
+    const password = process.env.ADMIN_PASSWORD || 'Mailra2024!'
+    const name = process.env.ADMIN_NAME || 'Admin'
 
     // Check if user already exists
     const existing = await sql`SELECT * FROM admin_users WHERE email = ${email}`
@@ -18,7 +17,7 @@ async function createAdminUser() {
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash(password, 10)
+    const passwordHash = await bcrypt.hash(password, 12)
     const id = `admin_${Date.now()}`
 
     // Create admin user
@@ -29,8 +28,10 @@ async function createAdminUser() {
 
     console.log('✅ Admin user created successfully!')
     console.log(`Email: ${email}`)
-    console.log(`Password: ${password}`)
-    console.log('\n⚠️  IMPORTANT: Change this password after first login!')
+    if (!process.env.ADMIN_PASSWORD) {
+      console.log(`Password: ${password}`)
+      console.log('\n⚠️  Default password used — change it under Admin → Account after first login.')
+    }
   } catch (error) {
     console.error('❌ Error creating admin user:', error)
     process.exit(1)
