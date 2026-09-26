@@ -58,8 +58,10 @@ export function Header() {
   return (
     <>
       <header
-        className={`site-header fixed top-0 left-0 right-0 z-50 border-b border-hairline/60 bg-canvas/85 backdrop-blur-md transition-colors ${
-          onDark ? "site-header--on-dark" : ""
+        className={`site-header fixed top-0 left-0 right-0 z-50 backdrop-blur-md transition-all ${
+          onDark
+            ? "site-header--on-dark bg-transparent border-b border-transparent"
+            : "bg-canvas border-b border-hairline/40 shadow-sm"
         }`}
         style={{ height: "var(--header-h)" }}
       >
