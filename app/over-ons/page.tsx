@@ -1,238 +1,189 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, MapPin, Truck, HeartHandshake, Clock } from "lucide-react"
+import { ArrowRight, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { NetherlandsMap } from "@/components/netherlands-map"
+import { Container, Section, Eyebrow, Hairline, ArchFrame } from "@/components/site/primitives"
+import { siteConfig } from "@/lib/site-config"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Over Ons - Mailra Verhuur",
-  description: "Leer meer over Mailra, uw betrouwbare partner voor evenementverhuur in Nederland.",
+  title: "Over Caftan by Mailra",
+  description:
+    "Caftan by Mailra is uw partner voor stijlvolle verhuur van meubilair en decoratie voor bruiloften en feesten in Nederland. Lees ons verhaal.",
+  alternates: { canonical: "/over-ons" },
 }
-
-const process = [
-  {
-    step: "1",
-    title: "Neem Contact Op",
-    description: "Vertel ons over uw evenement, datum en wensen. Wij denken graag met u mee.",
-  },
-  {
-    step: "2",
-    title: "Offerte op Maat",
-    description: "U ontvangt een gedetailleerde offerte afgestemd op uw specifieke behoeften.",
-  },
-  {
-    step: "3",
-    title: "Levering & Opbouw",
-    description: "Wij leveren en bouwen op de gewenste locatie op het afgesproken tijdstip.",
-  },
-  {
-    step: "4",
-    title: "Ophaal Service",
-    description: "Na uw evenement halen wij alles weer netjes op. U hoeft niets te doen.",
-  },
-]
 
 const values = [
   {
-    icon: HeartHandshake,
+    number: "01",
     title: "Persoonlijke Service",
     description: "Elke klant is uniek. Wij luisteren naar uw wensen en bieden advies op maat.",
   },
   {
-    icon: Truck,
+    number: "02",
     title: "Betrouwbare Levering",
     description: "Wij zorgen ervoor dat alles op tijd en in perfecte staat wordt geleverd.",
   },
   {
-    icon: Clock,
+    number: "03",
     title: "Flexibiliteit",
-    description: "Van kleine intieme feesten tot grote evenementen - wij passen ons aan.",
+    description: "Van kleine intieme feesten tot grote evenementen — wij passen ons aan.",
   },
-]
-
-const serviceAreas = [
-  "Amsterdam",
-  "Rotterdam",
-  "Den Haag",
-  "Utrecht",
-  "Noord-Holland",
-  "Zuid-Holland",
-  "Noord-Brabant",
-  "Gelderland",
 ]
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-canvas">
       <Header />
-      
-      {/* Hero Section */}
-      <section className="bg-secondary pt-32 pb-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+
+      {/* Hero */}
+      <section
+        className="bg-linen"
+        style={{ paddingTop: "calc(var(--header-h) + var(--space-section-sm))" }}
+      >
+        <Container size="wide">
+          <div className="grid grid-cols-1 items-end gap-12 pb-16 lg:grid-cols-2 lg:pb-0">
             <div>
-              <h1 className="font-serif text-4xl tracking-tight text-foreground sm:text-5xl md:text-6xl">
-                Over Mailra
-              </h1>
-              <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-                Bij Mailra geloven we dat elke speciale gelegenheid een vleugje elegantie en 
-                verfijning verdient. Wij bieden een exclusieve collectie van hoogwaardige 
-                stijlvolle decoraties, caftans, stoelen en tafels, perfect afgestemd op 
-                bruiloften, feesten en andere bijzondere momenten.
+              <Eyebrow>Ons verhaal</Eyebrow>
+              <h1 className="text-display-2 mt-4 text-ink">Over {siteConfig.brandFull}</h1>
+              <p className="text-lead mt-6">
+                Bij {siteConfig.brandShort} geloven we dat elke speciale gelegenheid een
+                vleugje elegantie en verfijning verdient. Wij bieden een exclusieve
+                collectie van hoogwaardige stijlvolle decoraties, caftans, stoelen en
+                tafels, perfect afgestemd op bruiloften, feesten en andere bijzondere
+                momenten.
               </p>
-              <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-                Onze zorgvuldig samengestelde selectie combineert tijdloze schoonheid met 
-                uitzonderlijke kwaliteit. Klanttevredenheid staat centraal - met persoonlijke 
-                en professionele service denken we graag met u mee om uw wensen werkelijkheid 
-                te maken. Wij zorgen voor een moeiteloze ervaring en een resultaat dat uw 
-                verwachtingen overtreft.
+              <p className="mt-4 leading-relaxed text-ink-70">
+                Onze zorgvuldig samengestelde selectie combineert tijdloze schoonheid met
+                uitzonderlijke kwaliteit. Klanttevredenheid staat centraal — met
+                persoonlijke en professionele service denken we graag met u mee om uw
+                wensen werkelijkheid te maken.
               </p>
             </div>
-            <div className="relative aspect-[4/3] lg:aspect-square">
+            <ArchFrame className="relative -mb-px aspect-[4/3] bg-linen lg:aspect-[4/5]">
               <Image
                 src="/about-us.jpg"
-                alt="Mailra evenementverhuur"
+                alt={`Sfeervolle decoratie van ${siteConfig.brandFull}`}
                 fill
-                className="rounded-2xl object-cover"
+                className="object-cover"
+                sizes="(min-width: 1024px) 50vw, 100vw"
               />
-            </div>
+            </ArchFrame>
           </div>
-        </div>
+        </Container>
       </section>
-      
-      {/* Values Section */}
-      <section className="py-24 bg-background">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
-              Onze Waarden
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Wat ons onderscheidt van de rest
-            </p>
+
+      {/* Values */}
+      <Section className="bg-canvas">
+        <Container size="wide">
+          <div className="max-w-xl">
+            <Eyebrow>Onze waarden</Eyebrow>
+            <h2 className="text-h2 mt-4 text-ink">Wat ons onderscheidt</h2>
           </div>
-          
-          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+
+          <div className="mt-14 grid grid-cols-1 gap-10 sm:grid-cols-3">
             {values.map((value) => (
-              <div key={value.title} className="text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <value.icon className="h-7 w-7 text-primary" />
-                </div>
-                <h3 className="mt-6 text-xl font-semibold text-foreground">{value.title}</h3>
-                <p className="mt-3 text-muted-foreground leading-relaxed">{value.description}</p>
+              <div key={value.number}>
+                <span className="text-display-2 !text-5xl text-gold-ink">{value.number}</span>
+                <Hairline className="my-5 w-10" />
+                <h3 className="text-h3 !text-xl text-ink">{value.title}</h3>
+                <p className="mt-3 leading-relaxed text-ink-70">{value.description}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-      
-      {/* Process Section */}
-      <section className="py-24 bg-card">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
-              Hoe het werkt
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              In vier eenvoudige stappen naar uw perfecte evenement
-            </p>
-          </div>
-          
-          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {process.map((step, index) => (
-              <div key={step.step} className="relative">
-                {index < process.length - 1 && (
-                  <div className="absolute top-8 left-1/2 hidden h-px w-full bg-border lg:block" />
-                )}
-                <div className="relative flex flex-col items-center text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-2xl font-serif text-primary-foreground">
-                    {step.step}
-                  </div>
-                  <h3 className="mt-6 text-lg font-semibold text-foreground">{step.title}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* Service Area Section */}
-      <section className="py-24 bg-background">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+        </Container>
+      </Section>
+
+      {/* Service area */}
+      <Section className="bg-linen">
+        <Container size="wide">
+          <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2">
             <div>
-              <h2 className="font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
-                Ons Werkgebied
-              </h2>
-              <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-                Wij leveren door heel Nederland, met speciale focus op de Randstad en omgeving. 
-                Neem contact met ons op om te bespreken of wij ook bij u kunnen leveren.
+              <Eyebrow>Werkgebied</Eyebrow>
+              <h2 className="text-h2 mt-4 text-ink">Wij leveren door heel Nederland</h2>
+              <p className="text-lead mt-6">
+                Met speciale focus op de Randstad en omgeving. Neem contact met ons op om
+                te bespreken of wij ook bij u kunnen leveren.
               </p>
-              
-              <div className="mt-8 flex flex-wrap gap-3">
-                {serviceAreas.map((area) => (
+
+              <div className="mt-8 flex flex-wrap gap-2">
+                {siteConfig.serviceAreas.map((area) => (
                   <div
                     key={area}
-                    className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm text-foreground"
+                    className="flex items-center gap-2 border border-hairline bg-canvas px-4 py-2 text-sm text-ink"
                   >
-                    <MapPin className="h-4 w-4 text-primary" />
+                    <MapPin className="h-3.5 w-3.5 text-gold-ink" aria-hidden="true" />
                     {area}
                   </div>
                 ))}
               </div>
-              
+
               <div className="mt-10">
                 <Link href="/contact">
-                  <Button className="rounded-full px-8">
+                  <Button className="rounded-[2px] px-8">
                     Neem Contact Op
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
               </div>
             </div>
-            
-            <div className="relative aspect-square rounded-2xl overflow-hidden">
+
+            <div className="relative aspect-square overflow-hidden bg-canvas">
               <NetherlandsMap />
             </div>
           </div>
-        </div>
-      </section>
-      
-      {/* CTA Section */}
-      <section className="bg-primary py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-          <h2 className="font-serif text-3xl tracking-tight text-primary-foreground sm:text-4xl md:text-5xl">
-            Klaar om uw evenement te plannen?
-          </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-primary-foreground/80">
-            Neem vandaag nog contact met ons op voor een vrijblijvende offerte. 
-            Wij helpen u graag bij het realiseren van uw dromen.
+        </Container>
+      </Section>
+
+      {/* Goed om te weten */}
+      <Section rhythm="sm" className="bg-canvas">
+        <Container size="text" className="text-center">
+          <Eyebrow>Goed om te weten</Eyebrow>
+          <h2 className="text-h2 !text-3xl mt-4 text-ink">Ons verhuurbeleid</h2>
+          <p className="mt-4 text-ink-70">
+            Van aanbetaling tot annulering en de huurperiode — alles over hoe huren bij
+            ons werkt staat overzichtelijk op één pagina.
+          </p>
+          <Link
+            href="/verhuurbeleid"
+            className="link-underline mt-6 inline-flex items-center gap-2 text-sm font-medium text-gold-ink"
+          >
+            Bekijk het verhuurbeleid
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Container>
+      </Section>
+
+      {/* CTA */}
+      <section className="bg-olive-deep py-24 text-center">
+        <Container>
+          <h2 className="text-h2 text-canvas">Klaar om uw evenement te plannen?</h2>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-canvas/75">
+            Neem vandaag nog contact met ons op voor een vrijblijvende offerte. Wij helpen
+            u graag bij het realiseren van uw dromen.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link href="/contact">
-              <Button size="lg" variant="secondary" className="rounded-full px-8 text-base">
+              <Button size="lg" variant="secondary" className="rounded-[2px] px-8">
                 Vraag Offerte Aan
               </Button>
             </Link>
             <Link href="/producten">
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="rounded-full px-8 text-base border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 bg-transparent"
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-[2px] border-canvas/30 bg-transparent px-8 text-canvas hover:bg-canvas/10 hover:text-canvas"
               >
                 Bekijk Producten
               </Button>
             </Link>
           </div>
-        </div>
+        </Container>
       </section>
-      
+
       <Footer />
     </main>
   )

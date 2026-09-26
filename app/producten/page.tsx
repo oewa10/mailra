@@ -3,12 +3,16 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ProductGrid } from "@/components/product-grid"
 import { CategoryFilter } from "@/components/category-filter"
+import { Container, Section, Eyebrow } from "@/components/site/primitives"
+import { Button } from "@/components/ui/button"
 import { getCategoriesWithProductCounts } from "@/lib/db"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Producten - Mailra Verhuur",
-  description: "Ontdek ons uitgebreide assortiment van stoelen, tafels en decoratie voor uw evenement.",
+  title: "Meubilair, Styling en Decoratie Huren",
+  description:
+    "Stoelen, tafels en decoratie huren voor uw bruiloft of feest. Bekijk de collectie van Caftan by Mailra — levering en opbouw door heel Nederland.",
+  alternates: { canonical: "/producten" },
 }
 
 export default async function ProductsPage({
@@ -18,65 +22,72 @@ export default async function ProductsPage({
 }) {
   const { category } = await searchParams
   const selectedCategory = category || "all"
-  
-  // Get categories with product counts and filter out empty ones
-  const categoriesWithCounts = await getCategoriesWithProductCounts(true)
-  const categories = categoriesWithCounts.filter(cat => cat.product_count > 0)
+
+  let categories: any[] = []
+  try {
+    const categoriesWithCounts = await getCategoriesWithProductCounts(true)
+    categories = (categoriesWithCounts as any[]).filter((cat) => cat.product_count > 0)
+  } catch {
+    categories = []
+  }
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-canvas">
       <Header />
-      
-      {/* Hero Section */}
-      <section className="bg-secondary pt-32 pb-16">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <h1 className="font-serif text-4xl tracking-tight text-foreground sm:text-5xl md:text-6xl">
-            Onze Producten
+
+      {/* Hero */}
+      <section
+        className="bg-linen"
+        style={{ paddingTop: "calc(var(--header-h) + var(--space-section-sm))", paddingBottom: "var(--space-section-sm)" }}
+      >
+        <Container size="wide">
+          <Eyebrow>Verhuur</Eyebrow>
+          <h1 className="text-display-2 mt-4 max-w-3xl text-ink">
+            Meubilair, styling en decoratie huren
           </h1>
-          <p className="mt-6 max-w-2xl text-lg text-muted-foreground leading-relaxed">
-            Van elegante stoelen tot stijlvolle tafels en decoratieve accessoires - 
-            wij hebben alles om uw evenement compleet te maken.
+          <p className="text-lead mt-6 max-w-xl">
+            Van elegante stoelen tot stijlvolle tafels en decoratieve accessoires — wij
+            hebben alles om uw evenement compleet te maken.
           </p>
-        </div>
+        </Container>
       </section>
-      
-      {/* Category Filter */}
-      <section className="border-b border-border bg-card sticky top-[73px] z-40">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <CategoryFilter 
-            categories={categories as any} 
-            selectedCategory={selectedCategory} 
-          />
-        </div>
+
+      {/* Category filter */}
+      <section
+        className="sticky z-30 border-b border-hairline bg-canvas/95 backdrop-blur-sm"
+        style={{ top: "var(--header-h)" }}
+      >
+        <Container size="wide">
+          <CategoryFilter categories={categories as any} selectedCategory={selectedCategory} />
+        </Container>
       </section>
-      
-      {/* Products Grid */}
-      <section className="py-16 bg-background">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+
+      {/* Grid */}
+      <Section reveal={false}>
+        <Container size="wide">
           <Suspense fallback={<ProductGridSkeleton />}>
             <ProductGrid selectedCategory={selectedCategory} />
           </Suspense>
-        </div>
-      </section>
-      
-      {/* CTA Section */}
-      <section className="bg-primary py-16">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-          <h2 className="font-serif text-3xl tracking-tight text-primary-foreground sm:text-4xl">
+        </Container>
+      </Section>
+
+      {/* CTA */}
+      <section className="bg-olive-deep py-20 text-center">
+        <Container>
+          <h2 className="text-h2 !text-3xl text-canvas sm:!text-4xl">
             Interesse in onze producten?
           </h2>
-          <p className="mt-4 text-lg text-primary-foreground/80">
+          <p className="mt-4 text-lg text-canvas/75">
             Neem contact met ons op voor een vrijblijvende offerte op maat.
           </p>
-          <a
-            href="/contact"
-            className="mt-8 inline-block rounded-full bg-card px-8 py-3 text-base font-medium text-foreground transition-transform hover:scale-105"
-          >
-            Vraag Offerte Aan
+          <a href="/contact">
+            <Button size="lg" variant="secondary" className="mt-8 rounded-[2px] px-8">
+              Vraag Offerte Aan
+            </Button>
           </a>
-        </div>
+        </Container>
       </section>
-      
+
       <Footer />
     </main>
   )
@@ -84,12 +95,12 @@ export default async function ProductsPage({
 
 function ProductGridSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-x-[var(--gap-grid)] gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="animate-pulse">
-          <div className="aspect-square rounded-xl bg-muted" />
-          <div className="mt-4 h-4 w-2/3 rounded bg-muted" />
-          <div className="mt-2 h-3 w-1/2 rounded bg-muted" />
+          <div className="aspect-[4/5] bg-linen" />
+          <div className="mt-4 h-4 w-2/3 bg-linen" />
+          <div className="mt-2 h-3 w-1/2 bg-linen" />
         </div>
       ))}
     </div>

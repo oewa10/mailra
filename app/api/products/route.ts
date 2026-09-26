@@ -1,41 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getProducts, createProduct, deleteProduct } from '@/lib/db'
+import { NextResponse } from "next/server"
+import { categoryExists, createProduct, getAdminProducts } from "@/lib/db"
+import { denyUnlessAdmin } from "@/lib/auth/server"
+import { parseJson, productSchema } from "@/lib/admin/validation"
+import { revalidatePublicSite } from "@/lib/admin/revalidate"
 
 export async function GET() {
+  const denied = await denyUnlessAdmin()
+  if (denied) return denied
   try {
-    const products = await getProducts()
-    return NextResponse.json(products)
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+    return NextResponse.json(await getAdminProducts())
+  } catch (err) {
+    console.error("Product fetch error:", err)
+    return NextResponse.json({ error: "Producten ophalen is mislukt." }, { status: 500 })
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const product = await request.json()
-    const result = await createProduct(product)
-    if (!result) {
-      return NextResponse.json({ error: 'Failed to create product in database' }, { status: 500 })
-    }
-    return NextResponse.json(result, { status: 201 })
-  } catch (error) {
-    console.error('Product creation error:', error)
-    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
-  }
-}
+export async function POST(request: Request) {
+  const denied = await denyUnlessAdmin()
+  if (denied) return denied
 
-export async function DELETE(request: NextRequest) {
+  const { data, error } = await parseJson(request, productSchema)
+  if (error) return error
+
   try {
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({ error: 'Product ID required' }, { status: 400 })
+    if (!(await categoryExists(data.category))) {
+      return NextResponse.json({ error: "Deze categorie bestaat niet (meer)." }, { status: 400 })
     }
-    
-    const success = await deleteProduct(id)
-    return NextResponse.json({ success })
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
+    const product = await createProduct(data)
+    revalidatePublicSite()
+    return NextResponse.json(product, { status: 201 })
+  } catch (err) {
+    console.error("Product create error:", err)
+    return NextResponse.json({ error: "Product opslaan is mislukt." }, { status: 500 })
   }
 }

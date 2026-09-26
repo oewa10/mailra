@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 interface Category {
@@ -17,17 +16,19 @@ interface CategoryFilterProps {
 }
 
 export function CategoryFilter({ categories, selectedCategory }: CategoryFilterProps) {
-  const searchParams = useSearchParams()
-
   return (
-    <nav className="flex gap-1 py-4 overflow-x-auto scrollbar-hide">
+    <nav
+      className="flex gap-8 overflow-x-auto py-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      aria-label="Filter producten op categorie"
+    >
       <Link
         href="/producten"
+        aria-current={selectedCategory === "all" ? "page" : undefined}
         className={cn(
-          "shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-colors",
+          "link-underline shrink-0 text-eyebrow !tracking-[0.14em] transition-colors",
           selectedCategory === "all"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            ? "text-ink link-underline-active"
+            : "text-ink-55 hover:text-ink",
         )}
       >
         Alle Producten
@@ -36,14 +37,18 @@ export function CategoryFilter({ categories, selectedCategory }: CategoryFilterP
         <Link
           key={category.id}
           href={`/producten?category=${category.id}`}
+          aria-current={selectedCategory === category.id ? "page" : undefined}
           className={cn(
-            "shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-colors",
+            "link-underline shrink-0 text-eyebrow !tracking-[0.14em] transition-colors",
             selectedCategory === category.id
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              ? "text-ink link-underline-active"
+              : "text-ink-55 hover:text-ink",
           )}
         >
           {category.name}
+          {typeof category.product_count === "number" && (
+            <span className="ml-1.5 text-ink-55">({category.product_count})</span>
+          )}
         </Link>
       ))}
     </nav>

@@ -2,9 +2,11 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { siteConfig } from "@/lib/site-config"
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -15,11 +17,18 @@ const navigation = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
+  const firstLinkRef = useRef<HTMLAnchorElement>(null)
+  const menuId = "mobile-nav"
 
-  // Prevent body scrolling when mobile menu is open
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden"
+      firstLinkRef.current?.focus()
     } else {
       document.body.style.overflow = "unset"
     }
@@ -28,141 +37,137 @@ export function Header() {
     }
   }, [mobileMenuOpen])
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMobileMenuOpen(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-          <div className="flex lg:flex-1">
+      <header
+        className="site-header fixed top-0 left-0 right-0 z-50 border-b border-hairline/60 bg-canvas/85 backdrop-blur-md"
+        style={{ height: "var(--header-h)" }}
+      >
+        <nav
+          className="mx-auto flex h-full items-center justify-between"
+          style={{
+            maxWidth: "88rem",
+            paddingInline: "var(--gutter)",
+          }}
+          aria-label="Hoofdnavigatie"
+        >
+          <div className="flex flex-1">
             <Link href="/" className="-m-1.5 p-1.5">
               <Image
                 src="/logo.png"
-                alt="Mailra Logo"
+                alt={`${siteConfig.brandFull} logo`}
                 width={120}
                 height={60}
-                className="h-14 w-auto"
+                className="h-12 w-auto sm:h-14"
                 priority
               />
             </Link>
           </div>
-          
+
           <div className="flex lg:hidden z-50">
             <button
-              className="relative p-2 transition-all duration-300"
+              className="relative p-2"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
+              aria-label={mobileMenuOpen ? "Sluit menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls={menuId}
             >
               <div className="relative w-6 h-6">
-                <Menu className={`h-6 w-6 absolute inset-0 text-foreground transition-all duration-300 ${mobileMenuOpen ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"}`} />
-                <X className={`h-6 w-6 absolute inset-0 text-foreground transition-all duration-300 ${mobileMenuOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-0"}`} />
+                <Menu
+                  className={`h-6 w-6 absolute inset-0 text-ink transition-all duration-300 ${mobileMenuOpen ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"}`}
+                  aria-hidden="true"
+                />
+                <X
+                  className={`h-6 w-6 absolute inset-0 text-ink transition-all duration-300 ${mobileMenuOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-0"}`}
+                  aria-hidden="true"
+                />
               </div>
             </button>
           </div>
-          
-          <div className="hidden lg:flex lg:gap-x-10">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
-              >
-                {item.name}
-              </Link>
-            ))}
+
+          <div className="hidden lg:flex lg:flex-1 lg:justify-center lg:gap-x-10">
+            {navigation.map((item) => {
+              const active = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`link-underline text-eyebrow !tracking-[0.14em] transition-colors ${
+                    active ? "text-ink link-underline-active" : "text-ink-70 hover:text-ink"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              )
+            })}
           </div>
-          
+
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
             <Link href="/contact">
-              <Button className="rounded-full px-6">
-                Offerte Aanvragen
-              </Button>
+              <Button className="rounded-[2px] px-6">Offerte Aanvragen</Button>
             </Link>
           </div>
         </nav>
       </header>
-      
-      {/* Full-screen Mobile Navigation */}
-      <div 
-        className={`fixed inset-0 z-40 lg:hidden transition-all duration-500 ${
+
+      {/* Full-screen mobile navigation */}
+      <div
+        id={menuId}
+        className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-500 ${
           mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobiel menu"
       >
-        {/* Background overlay */}
-        <div 
-          className={`absolute inset-0 bg-gradient-to-b from-background/95 via-background to-primary/10 backdrop-blur-md transition-all duration-500 ${
+        <div
+          className={`absolute inset-0 bg-linen transition-opacity duration-500 ${
             mobileMenuOpen ? "opacity-100" : "opacity-0"
           }`}
           onClick={() => setMobileMenuOpen(false)}
         />
-        
-        {/* Menu content */}
+
         <nav className="relative h-full flex flex-col items-center justify-center px-8">
-          {/* Logo at top */}
-          <div 
-            className={`absolute top-8 left-1/2 -translate-x-1/2 transition-all duration-500 ${
-              mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-8"
+          <div
+            className={`flex flex-col items-center gap-7 transition-all duration-500 ${
+              mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
-            <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-              <Image
-                src="/logo.png"
-                alt="Mailra Logo"
-                width={120}
-                height={60}
-                className="h-14 w-auto"
-              />
-            </Link>
-          </div>
-
-          {/* Menu items */}
-          <div className="flex flex-col items-center gap-8">
             {navigation.map((item, index) => (
               <Link
                 key={item.name}
                 href={item.href}
+                ref={index === 0 ? firstLinkRef : undefined}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`text-3xl sm:text-4xl font-serif text-foreground hover:text-primary transition-all duration-500 ${
-                  mobileMenuOpen 
-                    ? "opacity-100 translate-y-0" 
-                    : "opacity-0 translate-y-8"
-                }`}
-                style={{ 
-                  transitionDelay: mobileMenuOpen ? `${index * 100 + 200}ms` : "0ms"
+                className="text-display-2 !text-4xl text-ink hover:text-gold-ink transition-colors"
+                style={{
+                  transitionDelay: mobileMenuOpen ? `${index * 80 + 150}ms` : "0ms",
                 }}
               >
                 {item.name}
               </Link>
             ))}
           </div>
-          
-          {/* CTA Button */}
-          <div 
-            className={`absolute bottom-24 left-1/2 -translate-x-1/2 w-full max-w-xs px-6 transition-all duration-700 ${
-              mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+
+          <div
+            className={`absolute bottom-20 left-1/2 -translate-x-1/2 w-full max-w-xs px-6 transition-all duration-500 ${
+              mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
-            style={{ 
-              transitionDelay: mobileMenuOpen ? "600ms" : "0ms"
-            }}
           >
             <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full rounded-full py-6 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-105">
+              <Button className="w-full rounded-[2px] py-6 text-base">
                 Offerte Aanvragen
               </Button>
             </Link>
-          </div>
-          
-          {/* Decorative element */}
-          <div 
-            className={`absolute bottom-12 left-1/2 -translate-x-1/2 transition-all duration-700 ${
-              mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-            style={{ 
-              transitionDelay: mobileMenuOpen ? "700ms" : "0ms"
-            }}
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-1 bg-primary/50" />
-              <p className="text-muted-foreground text-sm">Mailra Verhuur</p>
-            </div>
           </div>
         </nav>
       </div>
