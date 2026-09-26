@@ -5,6 +5,10 @@ export type AdminProduct = {
   description: string
   dimensions: string
   capacity: string
+  /** Rental price in euros; null when it isn't shown ("prijs op aanvraag"). */
+  price: number | null
+  /** What the price is for, e.g. "per stuk" or "per dag"; may be empty. */
+  price_unit: string
   image: string
   active: boolean
   created_at: string

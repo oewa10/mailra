@@ -124,7 +124,7 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Telefoonnummer</Label>
-          <Input id="phone" name="phone" type="tel" placeholder="+31 6 1234 5678" className="rounded-[2px]" />
+          <Input id="phone" name="phone" type="tel" placeholder="06 12345678" className="rounded-[2px]" />
         </div>
       </div>
 
@@ -136,7 +136,7 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
         <div className="space-y-2">
           <Label htmlFor="eventType">Type evenement</Label>
           <Select name="eventType" value={eventType} onValueChange={setEventType}>
-            <SelectTrigger className="w-full rounded-[2px]">
+            <SelectTrigger id="eventType" className="w-full rounded-[2px]">
               <SelectValue placeholder="Selecteer type" />
             </SelectTrigger>
             <SelectContent>
@@ -157,7 +157,7 @@ export function ContactPageForm({ preselectedProduct }: ContactPageFormProps) {
       <div className="space-y-2">
         <Label htmlFor="guestCount">Aantal gasten (geschat)</Label>
         <Select name="guestCount" value={guestCount} onValueChange={setGuestCount}>
-          <SelectTrigger className="w-full rounded-[2px]">
+          <SelectTrigger id="guestCount" className="w-full rounded-[2px]">
             <SelectValue placeholder="Selecteer aantal" />
           </SelectTrigger>
           <SelectContent>

@@ -4,6 +4,32 @@ _Audit date: 26 September 2026. Method: read every public route and the SEO plum
 
 ---
 
+## Status (26 September 2026)
+
+**Done: Phase 1 technical SEO**, plus the Phase 0 business details:
+- **Business details:** real phone, WhatsApp, email and Amersfoort address (`lib/site-config.ts`). Every call, WhatsApp and form link reads from there.
+- **Domain:** `https://mailra.nl` is canonical, and `www.mailra.nl` 301s to it (`next.config.mjs`).
+- **Per-page metadata:** a `pageMetadata()` helper (`lib/seo.tsx`) gives every page its own canonical, Open Graph, Twitter and share image. 404s have no canonical and one `noindex`.
+- **Titles and headings:** new titles, keyword H1 on the homepage, sentence-case headings. Header and footer now sit outside `<main>` via `app/(site)/layout.tsx`.
+- **Structured data:** a LocalBusiness + WebSite graph, breadcrumbs starting at Home, and rental `Offer` markup for priced products.
+- **Sitemap:** `lastModified` from the database and image entries; `priority` and `changefreq` removed.
+- **Product prices:** managed in the admin (`price`, `price_unit`). Shown as "€ 4,50 per stuk" or "Prijs op aanvraag".
+- **Brand assets:** Mailra monogram icons replace the v0 template favicons; a photographic share image with the brand font.
+- **Images and fixes:** event photos renamed and recompressed (`public/images/werk/`), unused assets removed. Contrast and form-label fixes bring accessibility to 100.
+
+**Still to do (owner):**
+- Add `www.mailra.nl` as a domain in Vercel.
+- Set `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` on Vercel, verify in Search Console and Bing, and submit `https://mailra.nl/sitemap.xml`.
+- Enter prices in the admin.
+- Add a "Caftans" category in the admin.
+- Fill in `siteConfig.social`.
+
+**Deliberately skipped for now:** product detail pages (§2.2), Phase 3 and Phase 4.
+
+**Performance note:** on an unthrottled run the main content paints at about 0.13 s. The lab LCP of about 3 s comes from Lighthouse's slow-4G simulation charging the two preloaded fonts (~96 KB, mostly Fraunces with its optical-size axis). Trimming them would change the typography, so check real-user numbers in Vercel Speed Insights first.
+
+---
+
 ## 1. Summary
 
 The technical base is solid. Pages are static, there's one `<h1>` per page, titles and descriptions are unique, `lang="nl"`, robots and the sitemap work, admin and API routes are noindexed, and JSON-LD is present. Lighthouse SEO scores **100**, but that is only a basic checklist.
@@ -104,7 +130,7 @@ Each item lists the file and a done-when check.
 - Delete assets nothing references (check with grep first): `category-*.jpg`, `hero-event.jpg`, `team.jpg`, `placeholder*`, and unused `misc` shots. `logo.png` is 104 KB, so ship an SVG or a 2× PNG ≤ 10 KB.
 - Pre-compress sources. `public/images` is 5.2 MB and single JPEGs are up to 720 KB. `next/image` resizes them, but smaller sources mean faster first optimisation and cheaper Vercel image usage.
 - Product alt text is always `"{name} huren bij Mailra"`. Use the product's description or colour or material too, e.g. "Goudkleurige chiavari stoel met wit kussen".
-- `/media/products/...` responses use `max-age=60, must-revalidate`, but the URL is versioned. Serve the current version with `public, max-age=31536000, immutable`.
+- ~~`/media/products/...` caching~~: already correct. The current version is served `immutable` for a year; the 60 s rule only covers outdated URLs.
 - Add a real **photographic OG image** (1200×630, event photo + logo), since the current one is text-only, and per-category OG images (`app/producten/[category]/opengraph-image.tsx` using the cover photo).
 
 ### 1.9 Performance / Core Web Vitals (target: LCP < 2.5 s on mobile)

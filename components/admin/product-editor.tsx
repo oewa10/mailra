@@ -43,6 +43,8 @@ type FormState = {
   description: string
   dimensions: string
   capacity: string
+  price: string
+  price_unit: string
   image: string
   active: boolean
 }
@@ -54,6 +56,8 @@ function initialState(product: AdminProduct | null, defaultCategory: string): Fo
     description: product?.description ?? "",
     dimensions: product?.dimensions ?? "",
     capacity: product?.capacity ?? "",
+    price: product?.price == null ? "" : product.price.toFixed(2).replace(".", ","),
+    price_unit: product?.price_unit ?? "",
     image: product?.image ?? "",
     active: product?.active ?? true,
   }
@@ -124,6 +128,9 @@ export function ProductEditor({
     const nextErrors: typeof errors = {}
     if (!form.name.trim()) nextErrors.name = "Vul een productnaam in"
     if (!form.category) nextErrors.category = "Kies een categorie"
+    if (form.price.trim() && !/^(€\s*)?\d+([.,]\d{1,2})?$/.test(form.price.trim())) {
+      nextErrors.price = "Vul een geldige prijs in, bijv. 12,50"
+    }
     if (Object.keys(nextErrors).length) return setErrors(nextErrors)
 
     setSaving(true)
@@ -317,6 +324,45 @@ export function ProductEditor({
                   onChange={(e) => update("capacity", e.target.value)}
                   placeholder="8 personen"
                   maxLength={120}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="product-price" className="mb-2 block text-sm text-ink">
+                  Huurprijs in € <span className="font-normal text-ink-55">(optioneel)</span>
+                </Label>
+                <Input
+                  id="product-price"
+                  value={form.price}
+                  onChange={(e) => update("price", e.target.value)}
+                  placeholder="12,50"
+                  inputMode="decimal"
+                  aria-invalid={!!errors.price}
+                  aria-describedby={errors.price ? "product-price-error" : "product-price-hint"}
+                  maxLength={12}
+                />
+                {errors.price ? (
+                  <p id="product-price-error" className="mt-1.5 text-xs text-destructive">
+                    {errors.price}
+                  </p>
+                ) : (
+                  <p id="product-price-hint" className="mt-1.5 text-xs text-ink-55">
+                    Leeg laten toont &ldquo;Prijs op aanvraag&rdquo;.
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="product-price-unit" className="mb-2 block text-sm text-ink">
+                  Prijs geldt <span className="font-normal text-ink-55">(optioneel)</span>
+                </Label>
+                <Input
+                  id="product-price-unit"
+                  value={form.price_unit}
+                  onChange={(e) => update("price_unit", e.target.value)}
+                  placeholder="per stuk"
+                  maxLength={40}
                 />
               </div>
             </div>

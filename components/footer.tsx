@@ -36,6 +36,7 @@ export async function Footer() {
   return (
     <footer className="border-t border-canvas/10 bg-olive-deep text-canvas">
       <div className="u-wide section-y-sm">
+        <h2 className="sr-only">Over deze website</h2>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.3fr_1fr_1fr_1.2fr]">
           <div>
             <Link href="/" className="text-display-2 !text-3xl text-canvas">
@@ -48,7 +49,7 @@ export async function Footer() {
           </div>
 
           <div>
-            <h3 className="text-eyebrow !text-canvas/50">Navigatie</h3>
+            <p className="text-eyebrow !text-canvas/50">Navigatie</p>
             <ul className="mt-5 space-y-3">
               {navigation.map((item) => (
                 <li key={item.name}>
@@ -64,7 +65,7 @@ export async function Footer() {
           </div>
 
           <div>
-            <h3 className="text-eyebrow !text-canvas/50">Producten</h3>
+            <p className="text-eyebrow !text-canvas/50">Producten</p>
             <ul className="mt-5 space-y-3">
               {categories.map((cat) => (
                 <li key={cat.href}>
@@ -80,7 +81,7 @@ export async function Footer() {
           </div>
 
           <div>
-            <h3 className="text-eyebrow !text-canvas/50">Contact</h3>
+            <p className="text-eyebrow !text-canvas/50">Contact</p>
             <ul className="mt-5 space-y-3">
               <li className="flex items-center gap-3 text-sm text-canvas/80">
                 <Phone className="h-4 w-4 shrink-0 text-gold" aria-hidden="true" />

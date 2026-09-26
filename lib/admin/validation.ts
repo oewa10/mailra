@@ -29,6 +29,21 @@ export const productSchema = z.object({
   description: optionalText(2000),
   dimensions: optionalText(120),
   capacity: optionalText(120),
+  // Euros; the editor sends text ("12,50"), older clients may omit it. Empty means "op aanvraag".
+  price: z
+    .union([z.string(), z.number()])
+    .nullish()
+    .transform((v, ctx) => {
+      const text = String(v ?? "").trim().replace(/^€\s*/, "").replace(",", ".")
+      if (text === "") return null
+      const amount = Number(text)
+      if (!/^\d+(\.\d{1,2})?$/.test(text) || amount > 99_999_999) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Vul een geldige prijs in, bijv. 12,50" })
+        return z.NEVER
+      }
+      return amount
+    }),
+  price_unit: optionalText(40),
   image: z
     .string()
     .max(MAX_IMAGE_LENGTH, "De afbeelding is te groot")

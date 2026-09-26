@@ -16,6 +16,7 @@ const nextConfig = {
   poweredByHeader: false,
   images: {
     formats: ['image/avif', 'image/webp'],
+    qualities: [60, 75],
   },
   async headers() {
     return [
@@ -35,6 +36,13 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      {
+        // One canonical host (lib/site-config.ts). Needs www.mailra.nl added as a domain in Vercel.
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.mailra.nl' }],
+        destination: 'https://mailra.nl/:path*',
+        permanent: true,
+      },
       {
         // Category filters used to be a query string; they are static pages now.
         source: '/producten',

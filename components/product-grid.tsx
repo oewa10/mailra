@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Camera } from "lucide-react"
 import type { CatalogProduct } from "@/lib/db"
+import { priceLabel } from "@/lib/price"
 
 export function ProductGrid({ products }: { products: CatalogProduct[] }) {
   if (products.length === 0) {
@@ -22,7 +23,7 @@ export function ProductGrid({ products }: { products: CatalogProduct[] }) {
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-[var(--gap-grid)] sm:gap-y-12 lg:grid-cols-3 xl:grid-cols-4">
       {products.map((product, index) => (
-        <li key={product.id}>
+        <li key={product.id} id={product.id} className="scroll-mt-40">
           <Link
             href={`/contact?product=${encodeURIComponent(product.name)}`}
             className="u-hover-zoom group block"
@@ -31,7 +32,7 @@ export function ProductGrid({ products }: { products: CatalogProduct[] }) {
               {product.image ? (
                 <Image
                   src={product.image}
-                  alt={`${product.name} huren bij Mailra`}
+                  alt={product.description ? `${product.name}: ${firstSentence(product.description)}` : `${product.name} huren`}
                   fill
                   // The first row is in view on arrival on desktop.
                   loading={index < 4 ? "eager" : "lazy"}
@@ -52,6 +53,9 @@ export function ProductGrid({ products }: { products: CatalogProduct[] }) {
                   {[product.dimensions, product.capacity].filter(Boolean).join(" · ")}
                 </p>
               )}
+              <p className="mt-1.5 text-sm text-ink">
+                {priceLabel(product) ?? <span className="text-ink-55">Prijs op aanvraag</span>}
+              </p>
               <span className="link-underline mt-2 inline-block text-xs font-medium text-gold-ink">
                 Vraag beschikbaarheid
               </span>
@@ -61,4 +65,9 @@ export function ProductGrid({ products }: { products: CatalogProduct[] }) {
       ))}
     </ul>
   )
+}
+
+function firstSentence(text: string) {
+  const sentence = text.split(/(?<=[.!?])\s/)[0].trim()
+  return sentence.length > 120 ? `${sentence.slice(0, 117).trimEnd()}…` : sentence
 }

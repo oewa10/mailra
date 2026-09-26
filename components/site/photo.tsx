@@ -7,6 +7,8 @@ type Props = {
   slot: PhotoSlot
   sizes: string
   priority?: boolean
+  /** Image quality; must be listed in images.qualities (next.config.mjs). */
+  quality?: 60 | 75
   className?: string
   /** Where the placeholder's brief sits, so it never collides with text laid over the photo. */
   captionAt?: "center" | "top" | "hero"
@@ -14,7 +16,7 @@ type Props = {
 }
 
 /** Fills its (positioned) parent with the slot's photo, or with a placeholder describing it. */
-export function Photo({ slot, sizes, priority, className, captionAt = "center", tone = "light" }: Props) {
+export function Photo({ slot, sizes, priority, quality, className, captionAt = "center", tone = "light" }: Props) {
   if (slot.src) {
     return (
       <Image
@@ -22,6 +24,7 @@ export function Photo({ slot, sizes, priority, className, captionAt = "center", 
         alt={slot.alt}
         fill
         priority={priority}
+        quality={quality}
         sizes={sizes}
         className={cn("object-cover", className)}
       />

@@ -1,32 +1,31 @@
-// Central place for brand + contact details.
-// "details come later" — everything below is a clearly-marked placeholder,
-// change it here once and it updates everywhere (header, footer, forms,
-// JSON-LD, metadata, WhatsApp messages).
+// Central place for brand + contact details. Change it here once and it updates everywhere
+// (header, footer, forms, JSON-LD, metadata, WhatsApp messages).
 
 export const siteConfig = {
   brandFull: "Caftan by Mailra",
   brandShort: "Mailra",
   tagline: "Jouw feest, onze sfeer.",
   description:
-    "Caftan by Mailra verhuurt hoogwaardige stoelen, tafels en decoratie voor bruiloften, feesten en zakelijke evenementen door heel Nederland.",
+    "Caftan by Mailra uit Amersfoort verhuurt stoelen, tafels, decoratie en caftans voor bruiloften, henna-avonden en feesten door heel Nederland.",
 
-  url: "https://www.mailra.nl", // TODO: confirm live domain
+  // The one canonical host; www.mailra.nl redirects here (next.config.mjs).
+  url: "https://mailra.nl",
 
   phone: {
-    display: "+31 6 1234 5678",
-    href: "tel:+31612345678",
+    display: "+31 6 38051319",
+    href: "tel:+31638051319",
   },
-  email: "info@mailra.nl",
+  email: "Fatimabouyafsakh@hotmail.com",
   whatsapp: {
     // Used for the WhatsApp deep-link ("coupled number").
     // International format, digits only, no leading +.
-    number: "31612345678",
+    number: "31638051319",
   },
   address: {
-    locality: "Amsterdam",
-    region: "Noord-Holland",
+    locality: "Amersfoort",
+    region: "Utrecht",
     country: "NL",
-    display: "Amsterdam, Nederland",
+    display: "Amersfoort, Nederland",
   },
   hours: {
     display: "Ma – Za: 9:00 – 18:00",
@@ -37,14 +36,15 @@ export const siteConfig = {
     facebook: "", // TODO
   },
   serviceAreas: [
+    "Amersfoort",
+    "Utrecht",
     "Amsterdam",
     "Rotterdam",
     "Den Haag",
-    "Utrecht",
+    "Provincie Utrecht",
+    "Gelderland",
     "Noord-Holland",
     "Zuid-Holland",
-    "Noord-Brabant",
-    "Gelderland",
   ],
 } as const
 
@@ -57,3 +57,6 @@ export function buildWhatsAppLink(message: string) {
   const encoded = encodeURIComponent(message)
   return `https://wa.me/${siteConfig.whatsapp.number}?text=${encoded}`
 }
+
+/** Plain chat link to the Mailra WhatsApp number, without a pre-filled message. */
+export const whatsAppChatUrl = `https://wa.me/${siteConfig.whatsapp.number}`
